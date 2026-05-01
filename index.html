@@ -2159,6 +2159,43 @@
             }
         }
 
+        async function generateAndSendPDFReport(chatId) {
+            const token = UNLOCKED_SETTINGS?.telegramToken;
+            if (!token || !window.jspdf) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const title = 'SGU Fleet Report';
+
+            doc.setFontSize(18);
+            doc.text(title, 14, 22);
+            doc.setFontSize(11);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+            doc.text(`Total Distance: ${totalDistance.toFixed(2)} km`, 14, 38);
+            doc.text(`Max Speed: ${maxSpeed.toFixed(1)} km/h`, 14, 46);
+
+            const history = JSON.parse(localStorage.getItem('sensor_reports') || '[]');
+            const tableData = history.map(r => [r.date + ' ' + r.time, r.type, r.event, r.loc, r.details]);
+
+            doc.autoTable({
+                startY: 55,
+                head: [['Time', 'Type', 'Event', 'Location', 'Details']],
+                body: tableData.length ? tableData : [['—', '—', 'No events recorded yet', '—', '—']],
+                theme: 'grid',
+                headStyles: { fillColor: [79, 70, 229] }
+            });
+
+            const pdfBlob = doc.output('blob');
+            const filename = `fleet_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+            const form = new FormData();
+            form.append('chat_id', String(chatId));
+            form.append('document', pdfBlob, filename);
+            form.append('caption', `SGU Logistics Fleet Report\nDistance: ${totalDistance.toFixed(2)} km | Max Speed: ${maxSpeed.toFixed(1)} km/h | Events: ${history.length}`);
+
+            await fetch(`https://api.telegram.org/bot${token}/sendDocument`, { method: 'POST', body: form });
+        }
+
         /** Format and send a warning alert every time (no suppression). Includes device ID, timestamp, type, value, severity. */
         function sendWarningAlert(severity, warningType, currentValue, details) {
             const ts = new Date().toISOString();
@@ -2227,12 +2264,19 @@
 
                     if (cmd === '/help') {
                         sendTelegramToChat(String(chatId),
-                            `Monzer Commands:\n` +
+                            `SGU Fleet Commands:\n` +
                             `/score — active driver safety score\n` +
                             `/events — behavior event summary\n` +
                             `/metrics — live OBD-II metrics\n` +
+                            `/report — generate & send PDF fleet report\n` +
                             `/help — show this help\n\n` +
-                            `Or ask any natural-language question about the fleet.`);
+                            `Or ask any question about the fleet.`);
+                        continue;
+                    }
+
+                    if (cmd === '/report' || /\b(report|pdf|send report|fleet report|generate report)\b/i.test(text)) {
+                        sendTelegramToChat(String(chatId), 'Generating fleet report, please wait...');
+                        await generateAndSendPDFReport(chatId);
                         continue;
                     }
                     // ── Natural-language → Gemini AI ─────────────────────────────────
