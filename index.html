@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logistics | Active Orders Dashboard</title>
+    <script>
+        (function() {
+            const authRaw = localStorage.getItem('sgu_auth') || sessionStorage.getItem('sgu_auth');
+            if (!authRaw) {
+                window.location.replace('login.html');
+                return;
+            }
+            try {
+                const auth = JSON.parse(authRaw);
+                if (auth.email !== 'monzertarigabdalla@gmail.com') {
+                    localStorage.removeItem('sgu_auth');
+                    sessionStorage.removeItem('sgu_auth');
+                    window.location.replace('login.html');
+                }
+            } catch (e) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
     
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
@@ -754,8 +773,20 @@
             <button class="w-11 h-11 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100">
                 <span class="material-symbols-outlined text-xl">settings</span>
             </button>
-            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                JD
+            <div class="relative" id="profile-container">
+                <button id="profile-btn" onclick="toggleProfileMenu(event)" class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity">
+                    <span id="profile-initials">M</span>
+                </button>
+                <div id="profile-menu" class="hidden absolute left-full bottom-0 ml-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[9999]">
+                    <div class="px-4 py-2 border-b border-gray-50">
+                        <p id="profile-name" class="text-sm font-semibold text-gray-800 whitespace-nowrap">Monzer</p>
+                        <p id="profile-email" class="text-xs text-gray-500 truncate max-w-[160px]">monzertarigabdalla@gmail.com</p>
+                    </div>
+                    <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                        <span class="material-symbols-outlined text-sm">logout</span>
+                        Logout
+                    </button>
+                </div>
             </div>
         </div>
     </aside>
@@ -4183,7 +4214,23 @@ RULES:
                 return "Goodbye.";
             }
             
-            // 3. Use Gemini with data context for complex questions
+            // 3. Try Python AI backend (Claude-powered, richer analysis)
+            try {
+                const fleetData = window.smartAI?.isReady() ? await window.smartAI.getData() : null;
+                const pyRes = await fetch('/api/ai/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: userMessage, context: fleetData })
+                });
+                if (pyRes.ok) {
+                    const { answer } = await pyRes.json();
+                    if (answer) return answer;
+                }
+            } catch (e) {
+                // Python backend unavailable — falling through to Gemini
+            }
+
+            // 4. Use Gemini with data context for complex questions
             try {
                 if (window.smartAI?.isReady()) {
                     const ctx = await window.smartAI.buildGeminiContext(userMessage);
@@ -7511,6 +7558,44 @@ Time: ${ts}`.trim();
             </div>
         </div>
     </div>
+<script>
+        (function initProfile() {
+            const authRaw = localStorage.getItem('sgu_auth') || sessionStorage.getItem('sgu_auth');
+            if (!authRaw) return;
+            try {
+                const auth = JSON.parse(authRaw);
+                const name = auth.name || 'Admin';
+                const email = auth.email || '';
+                const initials = name.charAt(0).toUpperCase();
+                const initialsEl = document.getElementById('profile-initials');
+                const nameEl = document.getElementById('profile-name');
+                const emailEl = document.getElementById('profile-email');
+                if (initialsEl) initialsEl.textContent = initials;
+                if (nameEl) nameEl.textContent = name;
+                if (emailEl) emailEl.textContent = email;
+            } catch (e) {}
+        })();
+
+        function toggleProfileMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('profile-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('sgu_auth');
+            sessionStorage.removeItem('sgu_auth');
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('profile-container');
+            const menu = document.getElementById('profile-menu');
+            if (container && menu && !container.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 <script src="database/loader.js"></script>
 </html>
