@@ -13,7 +13,7 @@
             }
             try {
                 const auth = JSON.parse(authRaw);
-                if (auth.email !== 'monzertarigabdalla@gmail.com') {
+                if (!auth.email) {
                     localStorage.removeItem('sgu_auth');
                     sessionStorage.removeItem('sgu_auth');
                     window.location.replace('login.html');
