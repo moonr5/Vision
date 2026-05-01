@@ -2046,10 +2046,10 @@
                 }
             });
             
-            // Start MQTT connection immediately (fastest path)
+            // Connect via backend SSE stream; falls back to direct MQTT if unavailable
             hideOfflineIndicator();
             updateConnectionUI('connecting');
-            connectMQTT();
+            connectSSE();
             
             // Initialize map and chart in parallel
             initMap(); 
@@ -2779,6 +2779,41 @@
             }
             
             requestAnimationFrame(animate);
+        }
+
+        // ─── SSE connection (primary) ────────────────────────────────────────
+        // Tries the Railway backend stream first. On error (backend not deployed
+        // or running locally) it falls back transparently to direct Paho MQTT.
+        function connectSSE() {
+            const es = new EventSource('/api/stream');
+            let gotMessage = false;
+
+            es.onopen = () => {
+                console.log('[SSE] Connected to backend stream');
+            };
+
+            es.onmessage = (e) => {
+                try {
+                    const { type, topic, data } = JSON.parse(e.data);
+                    if (type !== 'telemetry') return;
+                    if (!gotMessage) {
+                        gotMessage = true;
+                        console.log('[SSE] Live data flowing from backend');
+                    }
+                    // Re-use the existing Paho message handler without modification
+                    onMessageArrived({ payloadString: JSON.stringify(data), destinationName: topic || MQTT_TOPIC });
+                } catch (err) { /* malformed frame — ignore */ }
+            };
+
+            es.onerror = () => {
+                if (!gotMessage) {
+                    // Backend not reachable (local dev or PYTHON_AI_URL not set) — use direct MQTT
+                    console.log('[SSE] Backend stream unavailable — falling back to direct MQTT');
+                    es.close();
+                    connectMQTT();
+                }
+                // If we already had messages, EventSource retries automatically
+            };
         }
 
         // Prevent duplicate connection attempts
