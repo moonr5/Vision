@@ -100,8 +100,75 @@
         }
         @media (max-width: 768px) {
             .map-shell {
-                height: 50vh;
+                height: 45vh;
             }
+        }
+
+        /* ─── Mobile UI Optimizations ──────────────────────────────── */
+        @media (max-width: 768px) {
+
+            /* 1. Show map first — swap order of live panels */
+            #section-live > div:first-child { order: 2; }
+            #section-live > div:last-child  { order: 1; }
+
+            /* Tighter section padding */
+            #section-live { padding: 8px !important; gap: 8px !important; }
+
+            /* 2. Active orders → horizontal scrollable strip */
+            #dashboard-orders-list {
+                display: flex;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                gap: 10px;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 2px;
+            }
+            #dashboard-orders-list::-webkit-scrollbar { display: none; }
+            #dashboard-orders-list > * {
+                min-width: 260px;
+                max-width: 260px;
+                flex-shrink: 0;
+                margin-top: 0 !important;
+            }
+
+            /* 3. Bottom status panel — auto height, scrollable row */
+            .mobile-live-bottom {
+                height: auto !important;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                flex-shrink: 0;
+            }
+            .mobile-live-bottom::-webkit-scrollbar { display: none; }
+            .mobile-divider { display: none !important; }
+            .mobile-order-summary { min-width: 220px; }
+
+            /* 4. Header: hide tagline to save vertical space */
+            .header-tagline { display: none !important; }
+
+            /* 5. Connection timer: hide "Conn:" label */
+            .timer-conn-label { display: none !important; }
+
+            /* 6. Analytics section: tighter gap on mobile */
+            #section-analytics .grid { gap: 8px; }
+
+            /* 7. Drivers panel: hide right detail panel (use full width grid) */
+            #driver-details-panel { display: none !important; }
+
+            /* 8. Orders search bar: full width */
+            #section-orders .relative { width: 100%; }
+
+            /* 9. Prevent horizontal page overflow */
+            body { overflow-x: hidden; }
+        }
+
+        /* Extra small phones (≤390px) */
+        @media (max-width: 390px) {
+            #section-live { padding: 6px !important; }
+            .mobile-live-bottom > div { gap: 8px !important; }
+            #dashboard-orders-list > * { min-width: 240px; max-width: 240px; }
         }
 
         /* Map control glassmorphism (Leaflet + Geoman) */
@@ -814,13 +881,13 @@
                         </svg>
                     </div>
                 </div>
-                <p class="text-xs text-gray-400">Explore & track your shipments</p>
+                <p class="text-xs text-gray-400 header-tagline">Explore & track your shipments</p>
             </div>
             <div class="flex items-center gap-3">
                 <!-- Connection Timer -->
                 <div id="connection-timer-container" class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
                     <div id="connection-status-dot" class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    <span class="text-xs text-gray-500">Conn:</span>
+                    <span class="text-xs text-gray-500 timer-conn-label">Conn:</span>
                     <span id="connection-timer" class="font-mono text-xs font-bold text-gray-700">00:00:00</span>
                 </div>
                 <!-- Offline Indicator (Hidden by default) -->
@@ -908,7 +975,7 @@
                 </div>
 
                 <!-- Bottom Details Panel -->
-                <div class="h-48 card p-4 flex gap-4 shrink-0">
+                <div class="h-48 card p-4 flex gap-4 shrink-0 mobile-live-bottom">
                     <!-- Current Status -->
                     <div class="flex-1 flex items-center gap-4">
                         <!-- Coordinates -->
@@ -953,10 +1020,10 @@
                         </div>
                     </div>
 
-                    <div class="w-px bg-gray-100"></div>
+                    <div class="w-px bg-gray-100 mobile-divider"></div>
 
                     <!-- Order Summary -->
-                    <div class="w-80 flex flex-col justify-between">
+                    <div class="w-80 flex flex-col justify-between mobile-order-summary">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-semibold text-gray-700">Order Details</span>
                             <span class="text-xs font-semibold text-gray-700">Vehicle</span>
