@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="z_logo.png" type="image/png" sizes="32x32">
     <title>Logistics | Active Orders Dashboard</title>
     <script>
         (function() {
@@ -1221,6 +1222,48 @@
                         <span class="font-mono text-sm font-bold text-gray-800">--</span>
                     </div>
                 </div>
+                    </div>
+
+                    <!-- Technical Alerts -->
+                    <div class="card p-4 flex flex-col gap-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="text-[11px] font-semibold text-gray-800 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-red-500 text-base">security</span>
+                                System Alerts
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span id="tech-alerts-badge" class="hidden text-[9px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">0</span>
+                                <span class="text-[9px] text-gray-500 uppercase bg-gray-100 px-2 py-0.5 rounded-full tracking-wide">System</span>
+                            </div>
+                        </div>
+                        <div id="tech-alerts-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto">
+                            <div id="tech-alerts-empty" class="text-[10px] text-gray-400 text-center py-6">No technical alerts</div>
+                        </div>
+                    </div>
+
+                    <!-- SD Card / Buffered Upload Data -->
+                    <div class="card p-4 flex flex-col gap-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="text-[11px] font-semibold text-gray-800 flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-indigo-500 text-base">sd_card</span>
+                                Offline Data Upload
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <span id="buffered-count-badge" class="text-[9px] font-bold text-white bg-indigo-500 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">0</span>
+                                <span class="text-[9px] text-gray-500 uppercase bg-gray-100 px-2 py-0.5 rounded-full tracking-wide">Offline Records</span>
+                            </div>
+                        </div>
+                        <p class="text-[9px] text-gray-400 leading-relaxed -mt-1">
+                            Records saved on the device while it had no internet connection, sent automatically once the connection was restored.
+                            These do not change anything on the live view.
+                        </p>
+                        <div class="max-h-96 overflow-y-auto pr-1">
+                            <div id="buffered-records-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                <div id="buffered-empty" class="col-span-full text-[10px] text-gray-400 text-center py-8">
+                                    No offline records yet — waiting for the vehicle to upload saved data
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3043,7 +3086,8 @@
             updateConnectionUI('disconnected');
             stopConnectionTimer();
             showOfflineIndicator();
-            logReport('WARNING', 'MQTT Connection Failed', error.errorMessage || 'Unknown error', 0);
+            logReport('WARNING', 'System Not Connected', 'Could not connect to the vehicle', 0);
+            pushTechAlert('WARNING', 'System Not Connected', 'Could not reach the vehicle — check your connection');
             
             // Reset GPS to default/waiting state
             resetGPSToDefault();
@@ -3063,7 +3107,8 @@
                 updateConnectionUI('disconnected');
                 stopConnectionTimer();
                 showOfflineIndicator();
-                logReport('WARNING', 'MQTT Offline', 'Lost connection to MQTT broker.', 0);
+                logReport('WARNING', 'Device Disconnected', 'The vehicle went offline', 0);
+                pushTechAlert('WARNING', 'Device Disconnected', 'Lost contact with the vehicle');
                 
                 // Reset data timer flag so it will restart when data arrives again
                 dataTimerStarted = false;
@@ -3236,10 +3281,184 @@
             }
         }
         
+        // ── SD Card / Buffered Data Handler ──────────────────────────────────────
+        const _bufferedRecords = [];
+        const BUFFERED_MAX = 100;
+
+        function handleBufferedMessage(payload) {
+            // Support both nested (gps.*, sensors.*) and flat payload formats
+            const g = payload.gps     ?? {};
+            const s = payload.sensors ?? {};
+            const record = {
+                device_id:          payload.device_id          ?? 'unknown',
+                original_timestamp: payload.original_timestamp ?? '—',
+                uploaded_at:        payload.uploaded_at        ?? new Date().toISOString(),
+                // GPS — nested takes priority, fall back to flat
+                lat:   parseFloat(g.lat   ?? payload.lat   ?? 0),
+                lng:   parseFloat(g.lng   ?? payload.lng   ?? 0),
+                speed: parseFloat(g.speed ?? payload.speed ?? s.speed ?? 0),
+                loc:   g.loc  ?? payload.loc  ?? null,
+                sats:  g.sats ?? payload.sats ?? null,
+                // Sensors — nested takes priority, fall back to flat
+                s1:   s.s1   ?? payload.s1   ?? null,
+                s2:   s.s2   ?? payload.s2   ?? null,
+                mag1: s.mag1 ?? payload.mag1 ?? null,
+                mag2: s.mag2 ?? payload.mag2 ?? null,
+            };
+            _bufferedRecords.unshift(record);
+            if (_bufferedRecords.length > BUFFERED_MAX) _bufferedRecords.pop();
+            renderBufferedData();
+            pushTechAlert('INFO', 'Offline Data Received', `${_bufferedRecords.length} offline record(s) uploaded from the vehicle`);
+        }
+
+        function renderBufferedData() {
+            const list  = document.getElementById('buffered-records-list');
+            const count = document.getElementById('buffered-count-badge');
+            if (!list) return;
+
+            if (count) count.textContent = _bufferedRecords.length;
+
+            if (_bufferedRecords.length === 0) {
+                list.innerHTML = '<div id="buffered-empty" class="col-span-full text-[10px] text-gray-400 text-center py-8">No offline records yet — waiting for the vehicle to upload saved data</div>';
+                return;
+            }
+
+            function sc(v) { // sensor colour classes
+                if (v === 1) return { bg: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500', text: 'text-emerald-700', label: 'CLOSED' };
+                if (v === 0) return { bg: 'bg-red-50 border-red-200',         dot: 'bg-red-500',     text: 'text-red-700',     label: 'OPEN'   };
+                return          { bg: 'bg-gray-50 border-gray-200',           dot: 'bg-gray-300',    text: 'text-gray-400',    label: '—'      };
+            }
+
+            list.innerHTML = _bufferedRecords.map((r, i) => {
+                const num      = _bufferedRecords.length - i;
+                const hasGPS   = r.lat !== 0 || r.lng !== 0;
+                const latText  = hasGPS ? r.lat.toFixed(5) : '—';
+                const lngText  = hasGPS ? r.lng.toFixed(5) : '—';
+                const spdText  = r.speed > 0 ? `${r.speed.toFixed(1)}` : '0.0';
+                const locked   = r.loc === 1;
+                const satsText = r.sats !== null ? `${r.sats} sat` : '';
+
+                let origTime = r.original_timestamp;
+                try { const d = new Date(r.original_timestamp); if (!isNaN(d)) origTime = d.toLocaleString([], { dateStyle:'short', timeStyle:'short' }); } catch(_){}
+                let uploadTime = r.uploaded_at;
+                try { const d = new Date(r.uploaded_at); if (!isNaN(d)) uploadTime = d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } catch(_){}
+
+                const mapsHref = hasGPS ? `https://www.google.com/maps?q=${r.lat},${r.lng}` : null;
+
+                const s1 = sc(r.s1); const s2 = sc(r.s2);
+                const m1 = sc(r.mag1); const m2 = sc(r.mag2);
+
+                return `
+                <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
+
+                    <!-- Card header -->
+                    <div class="bg-indigo-600 px-3 py-2 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-white text-sm">sd_card</span>
+                            <span class="text-[10px] font-bold text-white tracking-wide">BUFFERED</span>
+                            <span class="text-[9px] text-indigo-200 font-mono">#${num}</span>
+                        </div>
+                        <span class="text-[9px] text-indigo-200 font-mono truncate">${_esc(r.device_id)}</span>
+                    </div>
+
+                    <!-- Timestamps -->
+                    <div class="px-3 py-2 bg-indigo-50 border-b border-indigo-100 flex flex-col gap-0.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[8px] text-indigo-400 uppercase font-medium">Recorded</span>
+                            <span class="text-[9px] font-mono text-indigo-700">${_esc(origTime)}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[8px] text-indigo-400 uppercase font-medium">Uploaded</span>
+                            <span class="text-[9px] font-mono text-indigo-700">${_esc(uploadTime)}</span>
+                        </div>
+                    </div>
+
+                    <!-- GPS section -->
+                    <div class="px-3 pt-2.5 pb-1.5">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-gray-400 text-sm">location_on</span>
+                                <span class="text-[9px] font-semibold text-gray-500 uppercase tracking-wide">GPS</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full ${locked ? 'bg-emerald-500' : 'bg-amber-400'}"></span>
+                                <span class="text-[9px] font-semibold ${locked ? 'text-emerald-600' : 'text-amber-500'}">${locked ? 'LOCKED' : 'WAITING'}</span>
+                                ${satsText ? `<span class="text-[8px] text-gray-400">${_esc(satsText)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <div class="bg-gray-50 rounded-lg px-2 py-1.5 flex flex-col gap-0.5">
+                                <span class="text-[8px] text-gray-400 uppercase">Lat</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800 leading-tight">${_esc(latText)}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-2 py-1.5 flex flex-col gap-0.5">
+                                <span class="text-[8px] text-gray-400 uppercase">Lng</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800 leading-tight">${_esc(lngText)}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-2 py-1.5 flex flex-col gap-0.5">
+                                <span class="text-[8px] text-gray-400 uppercase">Speed</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800">${_esc(spdText)} <span class="text-gray-400 font-normal">km/h</span></span>
+                            </div>
+                        </div>
+                        ${mapsHref ? `<a href="${mapsHref}" target="_blank" rel="noopener"
+                            class="mt-1.5 flex items-center gap-1 text-[9px] text-blue-500 hover:text-blue-700 transition-colors">
+                            <span class="material-symbols-outlined text-xs">open_in_new</span>Open on map
+                        </a>` : ''}
+                    </div>
+
+                    <!-- Sensors section -->
+                    <div class="px-3 pt-1.5 pb-3">
+                        <div class="flex items-center gap-1 mb-1.5">
+                            <span class="material-symbols-outlined text-gray-400 text-sm">sensors</span>
+                            <span class="text-[9px] font-semibold text-gray-500 uppercase tracking-wide">Sensors</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <div class="border rounded-lg px-2 py-1.5 flex items-center justify-between ${s1.bg}">
+                                <span class="text-[8px] font-medium text-gray-600">Fuel Cap 1</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full ${s1.dot}"></span>
+                                    <span class="text-[9px] font-bold font-mono ${s1.text}">${s1.label}</span>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg px-2 py-1.5 flex items-center justify-between ${s2.bg}">
+                                <span class="text-[8px] font-medium text-gray-600">Fuel Cap 2</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full ${s2.dot}"></span>
+                                    <span class="text-[9px] font-bold font-mono ${s2.text}">${s2.label}</span>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg px-2 py-1.5 flex items-center justify-between ${m1.bg}">
+                                <span class="text-[8px] font-medium text-gray-600">Compartment 1</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full ${m1.dot}"></span>
+                                    <span class="text-[9px] font-bold font-mono ${m1.text}">${m1.label}</span>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg px-2 py-1.5 flex items-center justify-between ${m2.bg}">
+                                <span class="text-[8px] font-medium text-gray-600">Compartment 2</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full ${m2.dot}"></span>
+                                    <span class="text-[9px] font-bold font-mono ${m2.text}">${m2.label}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>`;
+            }).join('');
+        }
+        // ─────────────────────────────────────────────────────────────────────────
+
         function onMessageArrived(message) {
             try {
                 const payload = JSON.parse(message.payloadString);
                 const topic   = message.destinationName;
+
+                // Buffered (SD card) messages are handled separately — never touch live UI
+                if (payload.type === 'buffered') {
+                    handleBufferedMessage(payload);
+                    return;
+                }
 
                 // Parse data according to ESP32 structure
                 const data = {
@@ -3279,14 +3498,16 @@
                 if (gpsHasFix && !previousGpsHasFix) {
                     // GPS just got a fix - update LOC indicator to green
                     updateDashboard({ loc: 1 });
-                    logReport('INFO', 'GPS Fix Acquired', 'Location locked', data.speed);
-                    
+                    logReport('INFO', 'Location Found', 'Vehicle location is now active', data.speed);
+                    pushTechAlert('INFO', 'Location Found', 'Vehicle location is now being tracked');
+
                     // Daniel Cooper comes online when GPS has fix
                     updateDanielCooperStatus(true);
                 } else if (!gpsHasFix && previousGpsHasFix) {
                     // GPS lost fix
                     updateDashboard({ loc: 0 });
-                    logReport('WARNING', 'GPS Fix Lost', 'Waiting for satellites...', data.speed);
+                    logReport('WARNING', 'Location Signal Lost', 'Searching for vehicle location...', data.speed);
+                    pushTechAlert('WARNING', 'Location Signal Lost', 'Cannot find the vehicle — searching...');
                     
                     // Daniel Cooper goes offline when GPS loses fix
                     updateDanielCooperStatus(false);
@@ -3295,39 +3516,45 @@
                 // Check for alerts
                 // 1. Theft Alert
                 if (data.theft_detected === true) {
-                    showAlert('warning', 'CRITICAL: Fuel Theft Detected', 'Unauthorized fuel access detected', 10000);
-                    logReport('CRITICAL', 'Fuel Theft Alert', 'S1 triggered - Possible fuel theft detected', data.speed);
+                    showAlert('warning', 'Fuel Theft Detected', 'Someone may be stealing fuel — act immediately', 10000);
+                    logReport('CRITICAL', 'Fuel Theft Detected', 'Suspicious access to the fuel — possible theft in progress', data.speed);
+                    pushTechAlert('CRITICAL', 'Fuel Theft Detected', 'Suspicious access to the fuel detected');
                 }
                 
                 // 2. Security Breach Alert (mag1 or mag2 changed from 1 to 0)
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag2 !== null) {
                     if ((prevSensorStates.mag1 === 1 && data.mag1 === 0) || 
                         (prevSensorStates.mag2 === 1 && data.mag2 === 0)) {
-                        showAlert('security', 'Security Breach: Compartment Opened', 'MAG sensor detected unauthorized compartment access', 8000);
-                        logReport('WARNING', 'Security Breach', 'MAG sensor triggered - Compartment opened', data.speed);
+                        showAlert('security', 'Compartment Opened', 'A storage compartment was unexpectedly opened', 8000);
+                        logReport('WARNING', 'Compartment Opened', 'A storage compartment was opened unexpectedly', data.speed);
+                        pushTechAlert('WARNING', 'Compartment Opened', 'A storage compartment was opened');
                     }
                 }
                 
                 // 3. Sensor Trigger Alerts - Alert when value changes from 1 to 0 (opened)
                 // Logic: 1 = Closed/Normal (Orange), 0 = Open/Alert (Red)
                 if (prevSensorStates.s1 !== null && prevSensorStates.s1 === 1 && data.s1 === 0) {
-                    showAlert('security', 'Security Breach: S1 Opened', 'Fuel cap access detected', 6000);
-                    logReport('WARNING', 'S1 Opened', 'Limit switch S1 opened - Fuel cap access', data.speed);
+                    showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
+                    logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened (sensor 1)', data.speed);
+                    pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected — sensor 1');
                 }
                 
                 if (prevSensorStates.s2 !== null && prevSensorStates.s2 === 1 && data.s2 === 0) {
-                    showAlert('security', 'Security Breach: S2 Opened', 'Fuel cap access detected', 6000);
-                    logReport('WARNING', 'S2 Opened', 'Limit switch S2 opened - Fuel cap access', data.speed);
+                    showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
+                    logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened (sensor 2)', data.speed);
+                    pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected — sensor 2');
                 }
                 
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag1 === 1 && data.mag1 === 0) {
-                    showAlert('security', 'Security Breach: MAG1 Opened', 'Compartment access detected', 6000);
-                    logReport('WARNING', 'MAG1 Opened', 'Magnetic sensor MAG1 opened - Compartment access', data.speed);
+                    showAlert('security', 'Compartment 1 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    logReport('WARNING', 'Compartment 1 Opened', 'Compartment 1 was opened unexpectedly', data.speed);
+                    pushTechAlert('WARNING', 'Compartment 1 Opened', 'Compartment door 1 was opened');
                 }
                 
                 if (prevSensorStates.mag2 !== null && prevSensorStates.mag2 === 1 && data.mag2 === 0) {
-                    showAlert('security', 'Security Breach: MAG2 Opened', 'Compartment access detected', 6000);
-                    logReport('WARNING', 'MAG2 Opened', 'Magnetic sensor MAG2 opened - Compartment access', data.speed);
+                    showAlert('security', 'Compartment 2 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    logReport('WARNING', 'Compartment 2 Opened', 'Compartment 2 was opened unexpectedly', data.speed);
+                    pushTechAlert('WARNING', 'Compartment 2 Opened', 'Compartment door 2 was opened');
                 }
                 
                 // Update previous states
@@ -3363,7 +3590,8 @@
                         startConnectionTimer();
                         updateConnectionUI('connected');
                         hideOfflineIndicator();
-                        logReport('INFO', 'Data Connected', 'Live tracking active', data.speed);
+                        logReport('INFO', 'Tracking Started', 'Live vehicle tracking is now active', data.speed);
+                        pushTechAlert('INFO', 'Device Connected', 'Receiving live data from the vehicle');
                     }
                     
                     updateVehicleLocation(data.lat, data.lng);
@@ -4143,6 +4371,54 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
             return parts.join(' | ');
         }
         
+        // ── Technical Alerts Panel ────────────────────────────────────────────────
+        const _techAlerts = [];
+        const TECH_ALERTS_MAX = 30;
+
+        function pushTechAlert(severity, title, detail) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            _techAlerts.unshift({ severity, title, detail, time });
+            if (_techAlerts.length > TECH_ALERTS_MAX) _techAlerts.pop();
+            renderTechAlerts();
+        }
+
+        function renderTechAlerts() {
+            const list = document.getElementById('tech-alerts-list');
+            const badge = document.getElementById('tech-alerts-badge');
+            if (!list) return;
+
+            const iconMap   = { CRITICAL: 'error', WARNING: 'warning', INFO: 'info' };
+            const colorMap  = {
+                CRITICAL: { bg: 'bg-red-50',    icon: 'text-red-500',    label: 'text-red-700'    },
+                WARNING:  { bg: 'bg-amber-50',  icon: 'text-amber-500',  label: 'text-amber-700'  },
+                INFO:     { bg: 'bg-blue-50',   icon: 'text-blue-500',   label: 'text-blue-700'   }
+            };
+
+            if (_techAlerts.length === 0) {
+                list.innerHTML = '<div id="tech-alerts-empty" class="text-[10px] text-gray-400 text-center py-6">No technical alerts</div>';
+                if (badge) badge.classList.add('hidden');
+                return;
+            }
+
+            if (badge) { badge.textContent = _techAlerts.length; badge.classList.remove('hidden'); }
+
+            list.innerHTML = _techAlerts.map(a => {
+                const c = colorMap[a.severity] || colorMap.INFO;
+                const icon = iconMap[a.severity] || 'info';
+                return `<div class="flex items-start gap-2 px-2.5 py-2 rounded-lg ${c.bg}">
+                    <span class="material-symbols-outlined ${c.icon} text-sm mt-0.5">${icon}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-semibold ${c.label} truncate">${a.title}</span>
+                            <span class="text-[9px] text-gray-400 shrink-0 font-mono">${a.time}</span>
+                        </div>
+                        <span class="text-[9px] text-gray-500 leading-tight">${a.detail}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        // ─────────────────────────────────────────────────────────────────────────
+
         function logReport(type, event, details, speed = 0) {
             if(type === 'INFO') eventCounts.info++;
             if(type === 'WARNING') eventCounts.warning++;
@@ -4218,6 +4494,27 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
                     </div>
                 `;
                 
+                // Build location cell — prefer raw gps object, fall back to stored loc string
+                const gd = r.gps || {};
+                const hasCoords = gd.lat && gd.lng && !(gd.lat === 0 && gd.lng === 0);
+                const rLat = hasCoords ? Number(gd.lat) : null;
+                const rLng = hasCoords ? Number(gd.lng) : null;
+                const mapsUrl = hasCoords ? `https://www.google.com/maps?q=${rLat},${rLng}` : null;
+
+                const locCell = hasCoords
+                    ? `<div class="flex items-start gap-1.5">
+                           <div class="font-mono text-[10px] text-gray-700 leading-tight">
+                               <div>${rLat.toFixed(5)}</div>
+                               <div>${rLng.toFixed(5)}</div>
+                           </div>
+                           <a href="${mapsUrl}" target="_blank" rel="noopener"
+                              title="Open location on Google Maps"
+                              class="flex-shrink-0 w-5 h-5 rounded-full bg-blue-50 hover:bg-blue-100 flex items-center justify-center transition-colors mt-0.5">
+                               <span class="material-symbols-outlined text-blue-500" style="font-size:11px;">map</span>
+                           </a>
+                       </div>`
+                    : `<span class="text-gray-400 text-[10px]">No location</span>`;
+
                 elReportBody.innerHTML += `
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-3 font-mono text-xs text-gray-500">${r.date} ${r.time}</td>
@@ -4225,7 +4522,7 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
                             <span class="px-2 py-1 rounded-lg text-[10px] font-semibold ${badgeClass}">${r.type}</span>
                         </td>
                         <td class="px-4 py-3 font-medium text-gray-800">${r.event}</td>
-                        <td class="px-4 py-3 font-mono text-xs text-gray-500">${r.loc}</td>
+                        <td class="px-4 py-3">${locCell}</td>
                         <td class="px-4 py-3 text-xs truncate max-w-[250px]">${detailsContent}</td>
                     </tr>`;
             });
@@ -5417,7 +5714,7 @@ RULES:
                 connectMQTT();
             }, 500);
             
-            logReport('INFO', 'Reconnecting', 'Manual MQTT reconnection initiated', 0);
+            logReport('INFO', 'Reconnecting', 'Trying to reconnect to the vehicle...', 0);
         }
 
         // Follow mode toggle functionality
