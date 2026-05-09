@@ -1551,7 +1551,7 @@
                         <div class="w-24 bg-gray-50 rounded-xl p-3 text-center">
                             <span class="material-symbols-outlined text-indigo-500 text-lg mb-1">route</span>
                             <p class="text-[10px] text-gray-400 uppercase">Km left</p>
-                            <p class="font-mono text-lg font-bold text-gray-800">18.3</p>
+                            <p id="val-distance" class="font-mono text-lg font-bold text-gray-800">Waiting...</p>
                         </div>
                         
                         <!-- Last Update Time -->
@@ -2656,6 +2656,9 @@
             if (kpiDist) kpiDist.innerText = totalDistance.toFixed(2);
             if (kpiMax) kpiMax.innerText = maxSpeed.toFixed(1);
             if (kpiAvg && speedCount > 0) kpiAvg.innerText = (speedSum / speedCount).toFixed(1);
+
+            // Restore distance counter (GPS fallback since OBD not stored)
+            updateDistanceDisplay(0, gpsHasFix);
 
             // Update event count badges
             const countInfo = document.getElementById('count-info');
@@ -4371,6 +4374,9 @@
                     // Fuel theft detection
                     theft_detected: payload.fuel?.theft_detected ?? false,
 
+                    // Odometer / distance (OBD priority, multiple field names)
+                    odometer: parseFloat(payload.obd?.odometer ?? payload.odometer ?? payload.obd?.distance ?? payload.distance ?? payload.obd?.trip_distance ?? payload.trip_distance ?? payload.obd?.total_distance ?? payload.total_distance ?? 0),
+
                     device_id: payload.device_id ?? 'device-01'
                 };
                 
@@ -4512,6 +4518,27 @@
             }
         }
         
+        // ── Real Distance Counter: OBD odometer → GPS fallback ───────────────
+        function updateDistanceDisplay(obdOdometer, hasGPSFix) {
+            const elDist = document.getElementById('val-distance');
+            if (!elDist) return;
+
+            // 1. OBD odometer has highest priority (real ECU data)
+            if (obdOdometer && obdOdometer > 0) {
+                elDist.innerText = obdOdometer.toFixed(1);
+                return;
+            }
+
+            // 2. GPS-calculated distance as fallback (only when GPS is locked)
+            if (hasGPSFix && totalDistance > 0) {
+                elDist.innerText = totalDistance.toFixed(2);
+                return;
+            }
+
+            // 3. Nothing yet
+            elDist.innerText = 'Waiting...';
+        }
+
         // Update all vehicle gauges from parsed GPS data
         function updateGauges(data) {
             // Update GPS coordinates display (fixed to 5 decimals)
@@ -4535,6 +4562,9 @@
                 elTime.innerText = new Date().toLocaleTimeString('en-US', { hour12: false });
             }
             
+            // Update Distance (OBD odometer priority, fallback to GPS-calculated)
+            updateDistanceDisplay(data.odometer, gpsHasFix);
+
             // Update OBD-II Panel
             const obdRpm = document.getElementById('obd-rpm');
             const obdLoad = document.getElementById('obd-load');
