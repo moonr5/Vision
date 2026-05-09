@@ -1226,6 +1226,12 @@
                         <div id="tech-alerts-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto">
                             <div id="tech-alerts-empty" class="text-[10px] text-gray-400 text-center py-6">No technical alerts</div>
                         </div>
+                        <!-- Clear tech alerts button -->
+                        <button id="tech-alerts-clear-btn" onclick="clearTechAlerts()"
+                            class="hidden self-end flex items-center gap-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all duration-200 group">
+                            <span class="material-symbols-outlined text-[13px] group-hover:scale-110 transition-transform">delete_sweep</span>
+                            Clear Alerts
+                        </button>
                     </div>
 
                     <!-- SD Card / Buffered Upload Data -->
@@ -1975,6 +1981,7 @@
                         previousLng,
                     },
                     eventCounts,
+                    techAlerts: _techAlerts,
                     sensorStates: latestSensorStates,
                     sensors,
                     messageCount,
@@ -2042,6 +2049,12 @@
                 // Restore event counts
                 if (state.eventCounts) {
                     eventCounts = state.eventCounts;
+                }
+
+                // Restore tech alerts
+                if (state.techAlerts && Array.isArray(state.techAlerts)) {
+                    _techAlerts.length = 0;
+                    state.techAlerts.forEach(a => _techAlerts.push(a));
                 }
 
                 // Restore sensor states
@@ -2147,8 +2160,9 @@
                 hideOfflineIndicator();
             }
 
-            // Render buffered records if any
+            // Render buffered records and tech alerts if any
             renderBufferedData();
+            renderTechAlerts();
         }
 
         // --- TiDB CLOUD DATA API INTEGRATION ---
@@ -3385,33 +3399,33 @@
             const html = `
             <div id="${alertId}" data-title="${_esc(title)}"
                  class="toast-item ${cfg.cls}">
-                <div class="px-2.5 py-2">
-                    <div class="flex items-start gap-2">
+                <div class="px-4 py-3">
+                    <div class="flex items-start gap-3">
                         <!-- Icon -->
-                        <div class="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center bg-gray-100">
-                            <span class="material-symbols-outlined text-[12px] ${cfg.color}">${cfg.icon}</span>
+                        <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style="background:${cfg.iconBg}">
+                            <span class="material-symbols-outlined text-[16px] ${cfg.color}">${cfg.icon}</span>
                         </div>
                         <!-- Body -->
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-[10px] leading-tight text-gray-800">${_esc(title)}</p>
-                            <p class="toast-msg text-[9px] text-gray-500 leading-snug mt-0.5">${_esc(message)}</p>
+                        <div class="flex-1 min-w-0 pt-0.5">
+                            <p class="font-semibold text-[12px] leading-tight text-slate-800">${_esc(title)}</p>
+                            <p class="toast-msg text-[11px] text-slate-500 leading-relaxed mt-1">${_esc(message)}</p>
                             ${aiInsight ? `
-                            <div class="toast-ai-insight mt-1">
+                            <div class="toast-ai-insight mt-2">
                                 <span class="toast-ai-badge">
-                                    <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI
+                                    <span class="material-symbols-outlined text-[10px]">auto_awesome</span>AI Insight
                                 </span>
                                 <span class="toast-ai-text">${_esc(aiInsight)}</span>
                             </div>` : `<div class="toast-ai-insight hidden" id="${alertId}-ai">
                                 <span class="toast-ai-badge">
-                                    <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI
+                                    <span class="material-symbols-outlined text-[10px]">auto_awesome</span>AI Insight
                                 </span>
                                 <span class="toast-ai-text"></span>
                             </div>`}
                         </div>
                         <!-- Close -->
                         <button onclick="removeAlert('${alertId}')"
-                                class="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
-                            <span class="material-symbols-outlined text-[10px]">close</span>
+                                class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all mt-0.5">
+                            <span class="material-symbols-outlined text-[14px]">close</span>
                         </button>
                     </div>
                 </div>
@@ -3447,16 +3461,16 @@
             }
         }
 
-        // Map type string → CSS class + icon + icon color + sound flag
+        // Map type string → CSS class + icon + icon color + icon bg + sound flag
         function _toastConfig(type) {
             const map = {
-                warning:  { cls: 't-critical', icon: 'warning',        color: 'text-red-500',    sound: true  },
-                critical: { cls: 't-critical', icon: 'emergency',      color: 'text-red-500',    sound: true  },
-                security: { cls: 't-security', icon: 'lock_open',      color: 'text-violet-500', sound: true  },
-                success:  { cls: 't-success',  icon: 'check_circle',   color: 'text-emerald-500',sound: false },
-                info:     { cls: 't-info',     icon: 'info',           color: 'text-blue-500',   sound: false },
-                behavior: { cls: 't-behavior', icon: 'directions_car', color: 'text-orange-500', sound: false },
-                buffered: { cls: 't-buffered', icon: 'sd_card',        color: 'text-indigo-500', sound: true  },
+                warning:  { cls: 't-critical', icon: 'warning',        color: 'text-red-500',    iconBg: '#fef2f2', sound: true  },
+                critical: { cls: 't-critical', icon: 'emergency',      color: 'text-red-500',    iconBg: '#fef2f2', sound: true  },
+                security: { cls: 't-security', icon: 'lock_open',      color: 'text-violet-600', iconBg: '#f5f3ff', sound: true  },
+                success:  { cls: 't-success',  icon: 'check_circle',   color: 'text-emerald-600',iconBg: '#ecfdf5', sound: false },
+                info:     { cls: 't-info',     icon: 'info',           color: 'text-blue-600',   iconBg: '#eff6ff', sound: false },
+                behavior: { cls: 't-behavior', icon: 'directions_car', color: 'text-orange-600', iconBg: '#fff7ed', sound: false },
+                buffered: { cls: 't-buffered', icon: 'sd_card',        color: 'text-indigo-600', iconBg: '#eef2ff', sound: true  },
             };
             return map[type] || map.info;
         }
@@ -4701,16 +4715,48 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
         const _techAlerts = [];
         const TECH_ALERTS_MAX = 30;
 
+        // ── Tech Alert Deduplication ────────────────────────────────────────────
+        const _techAlertDedup = {};   // title → last pushed timestamp
+        const TECH_ALERT_DEDUP_MS = {
+            CRITICAL: 10000,
+            WARNING:  30000,
+            INFO:     60000,
+        };
+
+        function _shouldPushTechAlert(severity, title) {
+            const key = `${severity}:${title}`;
+            const now = Date.now();
+            const cooldown = TECH_ALERT_DEDUP_MS[severity] || TECH_ALERT_DEDUP_MS.INFO;
+            if (_techAlertDedup[key] && (now - _techAlertDedup[key]) < cooldown) {
+                return false;
+            }
+            _techAlertDedup[key] = now;
+            return true;
+        }
+
         function pushTechAlert(severity, title, detail) {
+            // Skip if this exact alert was pushed recently
+            if (!_shouldPushTechAlert(severity, title)) return;
+
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             _techAlerts.unshift({ severity, title, detail, time });
             if (_techAlerts.length > TECH_ALERTS_MAX) _techAlerts.pop();
             renderTechAlerts();
         }
 
+        function clearTechAlerts() {
+            const previousCount = _techAlerts.length;
+            if (previousCount === 0) return;
+            _techAlerts.length = 0;
+            renderTechAlerts();
+            showAlert('success', 'Alerts Cleared', `${previousCount} system alert(s) removed`, 3000);
+            saveSessionState();
+        }
+
         function renderTechAlerts() {
             const list = document.getElementById('tech-alerts-list');
             const badge = document.getElementById('tech-alerts-badge');
+            const clearBtn = document.getElementById('tech-alerts-clear-btn');
             if (!list) return;
 
             const iconMap   = { CRITICAL: 'error', WARNING: 'warning', INFO: 'info' };
@@ -4719,6 +4765,10 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
                 WARNING:  { bg: 'bg-amber-50',  icon: 'text-amber-500',  label: 'text-amber-700'  },
                 INFO:     { bg: 'bg-blue-50',   icon: 'text-blue-500',   label: 'text-blue-700'   }
             };
+
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', _techAlerts.length === 0);
+            }
 
             if (_techAlerts.length === 0) {
                 list.innerHTML = '<div id="tech-alerts-empty" class="text-[10px] text-gray-400 text-center py-6">No technical alerts</div>';
@@ -4745,7 +4795,29 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
         }
         // ─────────────────────────────────────────────────────────────────────────
 
+        // ── Report Deduplication ────────────────────────────────────────────────
+        const _reportDedup = {};   // event → last logged timestamp
+        const REPORT_DEDUP_MS = {
+            CRITICAL: 10000,  // 10s for critical
+            WARNING:  30000,  // 30s for warnings
+            INFO:     60000,  // 60s for info/routine
+        };
+
+        function _shouldLogReport(type, event) {
+            const key = `${type}:${event}`;
+            const now = Date.now();
+            const cooldown = REPORT_DEDUP_MS[type] || REPORT_DEDUP_MS.INFO;
+            if (_reportDedup[key] && (now - _reportDedup[key]) < cooldown) {
+                return false; // still in cooldown
+            }
+            _reportDedup[key] = now;
+            return true;
+        }
+
         function logReport(type, event, details, speed = 0) {
+            // Skip if this exact event was logged recently
+            if (!_shouldLogReport(type, event)) return;
+
             if(type === 'INFO') eventCounts.info++;
             if(type === 'WARNING') eventCounts.warning++;
             if(type === 'CRITICAL' || type === 'TIMEOUT') eventCounts.critical++;
@@ -8170,10 +8242,10 @@ Time: ${ts}`.trim();
         });
     </script>
     
-    <!-- Global Toast Container — top-left stack -->
+    <!-- Global Toast Container — top-center stack -->
     <div id="alert-container"
-         class="fixed top-4 left-4 z-[9999] pointer-events-none flex flex-col gap-1.5"
-         style="max-width:260px">
+         class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none flex flex-col gap-2 items-center"
+         style="width:380px;max-width:92vw">
     </div>
     <!-- Add/Edit Driver Modal -->
     <div id="driver-modal" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
