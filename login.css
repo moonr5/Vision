@@ -540,28 +540,82 @@ body {
     body {
         padding: 16px;
     }
-    
+
     .login-card {
         padding: 28px 22px;
         border-radius: 18px;
     }
-    
+
     .login-header h2 {
         font-size: 1.35rem;
     }
-    
+
     .neu-input input {
         padding: 14px 18px;
         padding-left: 42px;
     }
-    
+
     .neu-input label {
         left: 42px;
     }
-    
+
     .form-options {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+    }
+}
+
+/* Very small phones (≤360px) */
+@media (max-width: 360px) {
+    body {
+        padding: 10px;
+    }
+
+    .login-card {
+        padding: 22px 16px;
+        border-radius: 16px;
+        box-shadow:
+            12px 12px 36px #bec3cf,
+            -12px -12px 36px #ffffff;
+    }
+
+    .login-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .neu-icon {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 14px;
+    }
+
+    .neu-button {
+        padding: 12px 20px;
+    }
+
+    .social-login {
+        gap: 8px;
+    }
+}
+
+/* Touch devices: disable hover-lift transforms (prevents sticky-hover on iOS/Android) */
+@media (hover: none) {
+    .login-card:hover {
+        transform: none;
+    }
+
+    .neu-button:hover {
+        transform: none;
+        box-shadow:
+            6px 6px 16px #bec3cf,
+            -6px -6px 16px #ffffff;
+    }
+
+    .neu-social:hover {
+        transform: none;
+        box-shadow:
+            4px 4px 12px #bec3cf,
+            -4px -4px 12px #ffffff;
     }
 }

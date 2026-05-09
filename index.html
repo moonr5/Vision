@@ -172,6 +172,113 @@
             #dashboard-orders-list > * { min-width: 240px; max-width: 240px; }
         }
 
+        /* ─── Reports Section: stack vertically on tablet & mobile (≤1024px) ── */
+        @media (max-width: 1024px) {
+            #section-reports {
+                flex-direction: column !important;
+            }
+            #section-reports > div:first-child {
+                flex: 1;
+                min-height: 200px;
+            }
+            #section-reports > div:last-child {
+                flex: 0 0 340px;
+            }
+        }
+
+        /* ─── Orders & Drivers: responsive header/filter fixes (≤768px) ──────── */
+        @media (max-width: 768px) {
+
+            /* Orders header: wrap controls onto a second row */
+            #section-orders > div:first-child {
+                height: auto !important;
+                flex-wrap: wrap;
+                padding: 10px 16px !important;
+                gap: 8px;
+            }
+            /* Hide "Manage and track…" subtitle to save space */
+            #section-orders > div:first-child > div:first-child p {
+                display: none !important;
+            }
+            /* Controls row (search + dropdowns + button): fill width and wrap */
+            #section-orders > div:first-child > div:last-child {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            /* Search input: full width on mobile */
+            #orders-search {
+                width: 100% !important;
+            }
+
+            /* Drivers: filter/search bar wraps onto two rows */
+            #section-drivers .h-14 {
+                height: auto !important;
+                flex-wrap: wrap;
+                padding: 10px 16px !important;
+                gap: 8px;
+            }
+            #section-drivers .h-14 > div:first-child {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            #section-drivers .h-14 > div:last-child {
+                width: 100%;
+            }
+            /* Make the relative wrapper around drivers-search grow */
+            #section-drivers .h-14 > div:last-child .relative {
+                flex: 1;
+            }
+            #drivers-search {
+                width: 100% !important;
+            }
+            /* Drivers pagination: stack label and buttons */
+            #section-drivers .flex.items-center.justify-between.mt-6 {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            /* Analytics charts grid: remove inline fixed height */
+            #section-analytics .grid-cols-12 {
+                height: auto !important;
+            }
+            /* Ensure Speed Profile chart card has enough room */
+            #section-analytics .grid-cols-12 > div:first-child {
+                min-height: 240px;
+            }
+
+            /* Reports: tighter padding on mobile */
+            #section-reports {
+                padding: 12px !important;
+                gap: 12px;
+            }
+        }
+
+        /* ─── Small mobile (≤480px): compact dropdowns & overflow guards ─────── */
+        @media (max-width: 480px) {
+            /* Orders: let dropdowns share the row equally */
+            #section-orders .custom-dropdown {
+                flex: 1;
+                min-width: 100px;
+            }
+            #section-orders .dropdown-trigger {
+                width: 100%;
+                min-width: 0;
+            }
+            /* Reports AI panel: slightly shorter to leave more table space */
+            #section-reports > div:last-child {
+                flex: 0 0 280px;
+            }
+            /* Drivers header: wrap when button doesn't fit */
+            #section-drivers > div:first-child {
+                height: auto !important;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px 12px !important;
+            }
+        }
+
         /* Map control glassmorphism (Leaflet + Geoman) */
         .leaflet-control,
         .leaflet-pm-toolbar,
