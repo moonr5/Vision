@@ -1036,8 +1036,8 @@
                 min-width: 44px;
                 min-height: 44px;
             }
-            #follow-btn { width: 48px !important; height: 28px !important; }
-            #follow-knob { width: 22px !important; height: 22px !important; }
+            #follow-btn { width: 36px !important; height: 20px !important; }
+            #follow-knob { width: 16px !important; height: 16px !important; }
         }
 
         /* ── 4. Safe-Area Insets for Notch / Home Indicator ─────────── */
@@ -1502,10 +1502,10 @@
                     </div>
 
                     <!-- Follow Toggle (compact modern style) -->
-                    <div class="absolute top-4 left-14 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 shadow-md z-[1000] flex items-center gap-1.5">
-                        <span class="text-[10px] font-semibold text-gray-600 uppercase tracking-wide">Follow</span>
-                        <button id="follow-btn" onclick="toggleFollowMode()" class="relative w-10 h-6 rounded-full bg-indigo-500 transition-colors duration-200 flex items-center">
-                            <span id="follow-knob" class="absolute left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 transform translate-x-4"></span>
+                    <div class="absolute top-4 left-14 bg-white/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-md z-[1000] flex items-center gap-1">
+                        <span class="text-[9px] font-semibold text-gray-600 uppercase tracking-wide">Follow</span>
+                        <button id="follow-btn" onclick="toggleFollowMode()" class="relative w-8 h-5 rounded-full bg-indigo-500 transition-colors duration-200 flex items-center">
+                            <span id="follow-knob" class="absolute left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 transform translate-x-3"></span>
                         </button>
                     </div>
 
@@ -2960,7 +2960,7 @@
             const followKnob = document.getElementById('follow-knob');
             if (followBtn && followKnob) {
                 followBtn.classList.add('bg-indigo-500');
-                followKnob.classList.add('translate-x-2.5');
+                followKnob.classList.add('translate-x-3');
             }
             
             // Initialize trace button state (default ON - tracing active)
@@ -6683,7 +6683,7 @@ RULES:
                 // ON state
                 btn.classList.remove('bg-gray-300');
                 btn.classList.add('bg-indigo-500');
-                knob.classList.add('translate-x-2.5');
+                knob.classList.add('translate-x-3');
                 knob.classList.remove('translate-x-0');
                 
                 // Immediately center on current position if available
@@ -6694,7 +6694,7 @@ RULES:
                 // OFF state
                 btn.classList.remove('bg-indigo-500');
                 btn.classList.add('bg-gray-300');
-                knob.classList.remove('translate-x-2.5');
+                knob.classList.remove('translate-x-3');
                 knob.classList.add('translate-x-0');
             }
         }
