@@ -100,10 +100,14 @@ function connectToHiveMQ() {
         try { payload = JSON.parse(message.toString()); }
         catch { console.warn('[MQTT] Non-JSON message ignored'); return; }
 
-        // 1. Persist to PostgreSQL
-        await saveTelemetry(payload, topic);
+        // Buffered (SD card) records are forwarded to the browser for display
+        // in the Analyze page but must NOT be written to the live telemetry table —
+        // they are historical readings with their own original_timestamp.
+        if (payload.type !== 'buffered') {
+            await saveTelemetry(payload, topic);
+        }
 
-        // 2. Push to all connected dashboard SSE clients
+        // Push to all connected dashboard SSE clients (frontend handles routing)
         broadcastSSE({ type: 'telemetry', topic, data: payload });
     });
 
