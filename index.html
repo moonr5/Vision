@@ -2456,6 +2456,7 @@
         let map, marker, polyline, client;
         let pathCoordinates = [];
         let isTracing = true;
+        let lastRoadLat = null, lastRoadLng = null; // last position used for road geometry routing
         let messageCount = 0;
         let sensors = { s1: 1, s2: 1, s3: 0, s4: 0, mag1: 1, mag2: 1, loc: null };
         let currentLat = 0, currentLng = 0;
@@ -3454,7 +3455,7 @@
             window.vehicleMarker = marker; // Expose for updateMap function
             
             // Polyline for path tracing
-            polyline = L.polyline([], { color: '#6366f1', weight: 4, opacity: 0.8, lineJoin: 'round' }).addTo(map);
+            polyline = L.polyline([], { color: '#6366f1', weight: 4, opacity: 0.8, lineJoin: 'round', lineCap: 'round' }).addTo(map);
             window.tracePath = polyline; // Expose for clearPath function
             
             // Trace mode flag
@@ -3669,6 +3670,24 @@
             return { lat, lng };
         }
         
+        // Fetch full road geometry between two consecutive GPS positions using OSRM Route API.
+        // Returns an array of [lat, lng] pairs covering every node along the road, giving
+        // smooth road-following curves instead of straight lines between GPS points.
+        async function getRoadSegment(fromLat, fromLng, toLat, toLng) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    // GeoJSON coords are [lng, lat] — flip to [lat, lng] for Leaflet
+                    return data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                }
+            } catch (e) {
+                console.log('[ROAD] Route geometry failed, using direct line');
+            }
+            return [[toLat, toLng]];
+        }
+
         // Calculate bearing between two points for truck rotation
         function calculateBearing(lat1, lng1, lat2, lng2) {
             const toRad = (deg) => deg * Math.PI / 180;
@@ -4794,10 +4813,19 @@
                     // Smooth animation (500ms)
                     animateMarkerTo(snapped.lat, snapped.lng, 500);
                     
-                    // Update polyline with snapped coordinates
-                    if (isTracing) { 
-                        pathCoordinates.push(newLatLng); 
-                        polyline.setLatLngs(pathCoordinates); 
+                    // Update polyline with full road geometry between consecutive positions
+                    if (isTracing) {
+                        if (lastRoadLat !== null && lastRoadLng !== null) {
+                            getRoadSegment(lastRoadLat, lastRoadLng, snapped.lat, snapped.lng).then(roadPoints => {
+                                roadPoints.forEach(p => pathCoordinates.push(p));
+                                polyline.setLatLngs(pathCoordinates);
+                            });
+                        } else {
+                            pathCoordinates.push(newLatLng);
+                            polyline.setLatLngs(pathCoordinates);
+                        }
+                        lastRoadLat = snapped.lat;
+                        lastRoadLng = snapped.lng;
                     }
                     
                     // Pan map if following
@@ -6785,16 +6813,19 @@ RULES:
             console.log('Road snapping:', roadSnappingEnabled ? 'ON' : 'OFF');
         }
         
-        function clearPath() { 
+        function clearPath() {
             // Clear main polyline
             if (polyline) {
-                pathCoordinates = []; 
-                polyline.setLatLngs([]); 
+                pathCoordinates = [];
+                polyline.setLatLngs([]);
             }
             // Clear trace path if different
             if (window.tracePath && window.tracePath !== polyline) {
                 window.tracePath.setLatLngs([]);
             }
+            // Reset road routing anchor so next segment starts fresh
+            lastRoadLat = null;
+            lastRoadLng = null;
         }
 
         // --- CONNECTION TIMER & OFFLINE DETECTION ---
