@@ -726,11 +726,11 @@
         }
 
         .toast-item {
-            width: 260px;
-            border-radius: 10px;
-            background: #fff;
-            border: 1px solid rgba(0,0,0,0.06);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            width: 280px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);
             animation: toastIn 0.28s cubic-bezier(0.16,1,0.3,1) forwards;
             overflow: hidden;
             position: relative;
@@ -738,41 +738,42 @@
             transition: margin-bottom 0.2s ease, max-height 0.3s ease;
         }
         .toast-item.removing {
-            animation: toastOut 0.35s cubic-bezier(0.4,0,1,1) forwards;
+            animation: toastOut 0.3s cubic-bezier(0.4,0,1,1) forwards;
             pointer-events: none;
         }
-        .toast-item.t-critical { border-left: 3px solid #ef4444; background: #fef2f2; }
-        .toast-item.t-warning  { border-left: 3px solid #f59e0b; background: #fffbeb; }
-        .toast-item.t-info     { border-left: 3px solid #3b82f6; background: #eff6ff; }
-        .toast-item.t-success  { border-left: 3px solid #10b981; background: #ecfdf5; }
-        .toast-item.t-security { border-left: 3px solid #8b5cf6; background: #f5f3ff; }
-        .toast-item.t-buffered { border-left: 3px solid #6366f1; background: #eef2ff; }
-        .toast-item.t-behavior { border-left: 3px solid #f97316; background: #fff7ed; }
+        /* Type-colored border glow */
+        .toast-item.t-critical { border-color: rgba(239,68,68,0.45); box-shadow: 0 8px 32px rgba(239,68,68,0.15), 0 0 0 1px rgba(239,68,68,0.25); }
+        .toast-item.t-warning  { border-color: rgba(245,158,11,0.45); box-shadow: 0 8px 32px rgba(245,158,11,0.15), 0 0 0 1px rgba(245,158,11,0.25); }
+        .toast-item.t-info     { border-color: rgba(59,130,246,0.45); box-shadow: 0 8px 32px rgba(59,130,246,0.15), 0 0 0 1px rgba(59,130,246,0.25); }
+        .toast-item.t-success  { border-color: rgba(16,185,129,0.45); box-shadow: 0 8px 32px rgba(16,185,129,0.15), 0 0 0 1px rgba(16,185,129,0.25); }
+        .toast-item.t-security { border-color: rgba(139,92,246,0.45); box-shadow: 0 8px 32px rgba(139,92,246,0.15), 0 0 0 1px rgba(139,92,246,0.25); }
+        .toast-item.t-buffered { border-color: rgba(99,102,241,0.45); box-shadow: 0 8px 32px rgba(99,102,241,0.15), 0 0 0 1px rgba(99,102,241,0.25); }
+        .toast-item.t-behavior { border-color: rgba(249,115,22,0.45); box-shadow: 0 8px 32px rgba(249,115,22,0.15), 0 0 0 1px rgba(249,115,22,0.25); }
         .toast-progress {
             position: absolute;
             bottom: 0; left: 0;
             height: 2px;
-            background: rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.15);
             animation: toastProgress linear forwards;
         }
         .toast-ai-insight {
-            font-size: 9px;
+            font-size: 10px;
             line-height: 1.4;
-            color: #64748b;
-            border-top: 1px solid rgba(0,0,0,0.06);
+            color: rgba(255,255,255,0.55);
+            border-top: 1px solid rgba(255,255,255,0.08);
             padding-top: 5px;
-            margin-top: 4px;
+            margin-top: 5px;
         }
         .toast-ai-badge {
             display: inline-flex;
             align-items: center;
             gap: 3px;
-            font-size: 8px;
+            font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.04em;
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            color: #475569;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.6);
             border-radius: 4px;
             padding: 1px 5px;
             margin-bottom: 2px;
@@ -980,12 +981,12 @@
         /* ── 7. Toast: notch-safe + comfortable margins ─────────────── */
         @media (max-width: 768px) {
             #alert-container {
-                width: 92vw;
-                max-width: 400px;
+                width: auto;
+                max-width: 92vw;
                 top: max(1.25rem, env(safe-area-inset-top));
             }
             .toast-item {
-                width: 100%;
+                width: 260px;
             }
         }
 
@@ -3662,33 +3663,33 @@
             const html = `
             <div id="${alertId}" data-title="${_esc(title)}"
                  class="toast-item ${cfg.cls}">
-                <div class="px-4 py-3">
-                    <div class="flex items-start gap-3">
+                <div class="px-3.5 py-2.5">
+                    <div class="flex items-start gap-2.5">
                         <!-- Icon -->
-                        <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center" style="background:${cfg.iconBg}">
-                            <span class="material-symbols-outlined text-[16px] ${cfg.color}">${cfg.icon}</span>
+                        <div class="flex-shrink-0 pt-0.5">
+                            <span class="material-symbols-outlined text-[18px] ${cfg.color}">${cfg.icon}</span>
                         </div>
                         <!-- Body -->
-                        <div class="flex-1 min-w-0 pt-0.5">
-                            <p class="font-semibold text-[12px] leading-tight text-slate-800">${_esc(title)}</p>
-                            <p class="toast-msg text-[11px] text-slate-500 leading-relaxed mt-1">${_esc(message)}</p>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-[11px] leading-tight text-white">${_esc(title)}</p>
+                            <p class="toast-msg text-[10px] text-slate-300 leading-relaxed mt-0.5">${_esc(message)}</p>
                             ${aiInsight ? `
-                            <div class="toast-ai-insight mt-2">
+                            <div class="toast-ai-insight mt-1.5">
                                 <span class="toast-ai-badge">
-                                    <span class="material-symbols-outlined text-[10px]">auto_awesome</span>AI Insight
+                                    <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI
                                 </span>
                                 <span class="toast-ai-text">${_esc(aiInsight)}</span>
                             </div>` : `<div class="toast-ai-insight hidden" id="${alertId}-ai">
                                 <span class="toast-ai-badge">
-                                    <span class="material-symbols-outlined text-[10px]">auto_awesome</span>AI Insight
+                                    <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI
                                 </span>
                                 <span class="toast-ai-text"></span>
                             </div>`}
                         </div>
                         <!-- Close -->
                         <button onclick="removeAlert('${alertId}')"
-                                class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all mt-0.5">
-                            <span class="material-symbols-outlined text-[14px]">close</span>
+                                class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all mt-0.5">
+                            <span class="material-symbols-outlined text-[13px]">close</span>
                         </button>
                     </div>
                 </div>
