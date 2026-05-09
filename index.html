@@ -605,68 +605,54 @@
 
         /* ── Toast Notification System ─────────────────────────── */
         @keyframes toastIn {
-            0%   { opacity: 0; transform: translateX(24px) scale(0.97); }
-            100% { opacity: 1; transform: translateX(0)    scale(1);    }
+            0%   { opacity: 0; transform: translateY(-10px) scale(0.98); }
+            100% { opacity: 1; transform: translateY(0)     scale(1);    }
         }
         @keyframes toastOut {
-            0%   { opacity: 1; transform: translateX(0)    scale(1);    max-height: 120px; margin-bottom: 8px; }
-            60%  { opacity: 0; transform: translateX(28px) scale(0.95); }
-            100% { opacity: 0; max-height: 0;   margin-bottom: 0;  padding: 0; border-width: 0; }
+            0%   { opacity: 1; transform: translateY(0)     scale(1);    max-height: 90px; margin-bottom: 6px; }
+            60%  { opacity: 0; transform: translateY(-8px)  scale(0.97); }
+            100% { opacity: 0; max-height: 0; margin-bottom: 0; padding: 0; border-width: 0; }
         }
         @keyframes toastProgress {
             from { width: 100%; }
             to   { width: 0%;   }
         }
-        @keyframes criticalPulse {
-            0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.35), 0 8px 32px rgba(0,0,0,0.18); }
-            50%     { box-shadow: 0 0 0 6px rgba(239,68,68,0),  0 8px 32px rgba(0,0,0,0.18); }
-        }
 
         .toast-item {
-            width: 340px;
-            border-radius: 14px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.18);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.18);
-            animation: toastIn 0.32s cubic-bezier(0.16,1,0.3,1) forwards;
+            width: 260px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            animation: toastIn 0.28s cubic-bezier(0.16,1,0.3,1) forwards;
             overflow: hidden;
             position: relative;
             pointer-events: all;
-            transition: margin-bottom 0.25s ease, max-height 0.35s ease;
+            transition: margin-bottom 0.2s ease, max-height 0.3s ease;
         }
         .toast-item.removing {
             animation: toastOut 0.35s cubic-bezier(0.4,0,1,1) forwards;
             pointer-events: none;
         }
-        .toast-item.t-critical {
-            background: linear-gradient(135deg, rgba(220,38,38,0.94) 0%, rgba(153,27,27,0.97) 100%);
-            animation: toastIn 0.32s cubic-bezier(0.16,1,0.3,1) forwards, criticalPulse 2s ease-in-out 0.4s infinite;
-        }
-        .toast-item.t-warning {
-            background: linear-gradient(135deg, rgba(217,119,6,0.94) 0%, rgba(180,83,9,0.97) 100%);
-        }
-        .toast-item.t-info {
-            background: linear-gradient(135deg, rgba(37,99,235,0.94) 0%, rgba(29,78,216,0.97) 100%);
-        }
-        .toast-item.t-success {
-            background: linear-gradient(135deg, rgba(5,150,105,0.94) 0%, rgba(4,120,87,0.97) 100%);
-        }
-        .toast-item.t-security {
-            background: linear-gradient(135deg, rgba(124,58,237,0.94) 0%, rgba(91,33,182,0.97) 100%);
-        }
+        .toast-item.t-critical { border-left: 3px solid #ef4444; background: #fef2f2; }
+        .toast-item.t-warning  { border-left: 3px solid #f59e0b; background: #fffbeb; }
+        .toast-item.t-info     { border-left: 3px solid #3b82f6; background: #eff6ff; }
+        .toast-item.t-success  { border-left: 3px solid #10b981; background: #ecfdf5; }
+        .toast-item.t-security { border-left: 3px solid #8b5cf6; background: #f5f3ff; }
+        .toast-item.t-buffered { border-left: 3px solid #6366f1; background: #eef2ff; }
+        .toast-item.t-behavior { border-left: 3px solid #f97316; background: #fff7ed; }
         .toast-progress {
             position: absolute;
             bottom: 0; left: 0;
             height: 2px;
-            background: rgba(255,255,255,0.45);
+            background: rgba(0,0,0,0.08);
             animation: toastProgress linear forwards;
         }
         .toast-ai-insight {
             font-size: 9px;
             line-height: 1.4;
-            color: rgba(255,255,255,0.82);
-            border-top: 1px solid rgba(255,255,255,0.12);
+            color: #64748b;
+            border-top: 1px solid rgba(0,0,0,0.06);
             padding-top: 5px;
             margin-top: 4px;
         }
@@ -677,8 +663,9 @@
             font-size: 8px;
             font-weight: 700;
             letter-spacing: 0.04em;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
             border-radius: 4px;
             padding: 1px 5px;
             margin-bottom: 2px;
@@ -1264,6 +1251,12 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Clear buffered data button -->
+                        <button id="buffered-clear-btn" onclick="clearBufferedData()"
+                            class="hidden self-end flex items-center gap-1.5 text-[10px] font-medium text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all duration-200 group">
+                            <span class="material-symbols-outlined text-[13px] group-hover:scale-110 transition-transform">delete_sweep</span>
+                            Clear Records
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1935,9 +1928,10 @@
 
         let lastDataTime = Date.now();
         // How long we tolerate silence from the device before marking it offline (milliseconds)
-        const WATCHDOG_TIMEOUT = 30 * 1000; 
-        const REPORT_INTERVAL = 60 * 1000; 
+        const WATCHDOG_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+        const REPORT_INTERVAL = 5 * 60 * 1000;   // 5 minutes
         let watchdogTriggered = false;
+        let lastPeriodicInfoTime = 0;
 
         // Last device ID from telemetry (for alert payloads). No suppression flags – alerts fire every time.
         let lastDeviceId = "esp32-device-01";
@@ -1950,6 +1944,212 @@
         let startTime = Date.now();
         let chartInstance = null;
         let eventCounts = { info: 0, warning: 0, critical: 0 };
+
+        // --- SESSION STATE PERSISTENCE ---
+        // Keeps all live data across refreshes unless explicitly cleared
+        const SESSION_STATE_KEY = 'sgu_session_state';
+
+        function saveSessionState() {
+            try {
+                const state = {
+                    bufferedRecords: _bufferedRecords,
+                    analytics: {
+                        totalDistance,
+                        maxSpeed,
+                        speedSum,
+                        speedCount,
+                        startTime,
+                        maxSpeedRecorded,
+                        totalDistanceKm,
+                    },
+                    chart: chartInstance ? {
+                        labels: chartInstance.data.labels,
+                        data: chartInstance.data.datasets[0].data,
+                    } : { labels: [], data: [] },
+                    map: {
+                        currentLat,
+                        currentLng,
+                        pathCoordinates: pathCoordinates.slice(-500), // cap to last 500 points
+                        gpsHasFix,
+                        previousLat,
+                        previousLng,
+                    },
+                    eventCounts,
+                    sensorStates: latestSensorStates,
+                    sensors,
+                    messageCount,
+                    connection: {
+                        connectTime: connectionState.connectTime,
+                        elapsedSeconds: connectionState.elapsedSeconds,
+                        isOnline: connectionState.isOnline,
+                    },
+                    dataTimerStarted,
+                    lastDataTime,
+                    isTracing,
+                    followMode,
+                    geofence: {
+                        isInsideZone,
+                        activeGeofenceName: activeGeofence ? (activeGeofence.name || null) : null,
+                    },
+                    lastPeriodicInfoTime,
+                };
+                localStorage.setItem(SESSION_STATE_KEY, JSON.stringify(state));
+            } catch (e) {
+                // Silently fail if localStorage is full
+            }
+        }
+
+        function loadSessionState() {
+            try {
+                const raw = localStorage.getItem(SESSION_STATE_KEY);
+                if (!raw) return false;
+                const state = JSON.parse(raw);
+
+                // Restore buffered records
+                if (state.bufferedRecords && Array.isArray(state.bufferedRecords)) {
+                    _bufferedRecords.length = 0;
+                    state.bufferedRecords.forEach(r => _bufferedRecords.push(r));
+                }
+
+                // Restore analytics
+                if (state.analytics) {
+                    totalDistance = state.analytics.totalDistance ?? 0;
+                    maxSpeed = state.analytics.maxSpeed ?? 0;
+                    speedSum = state.analytics.speedSum ?? 0;
+                    speedCount = state.analytics.speedCount ?? 0;
+                    startTime = state.analytics.startTime ?? Date.now();
+                    maxSpeedRecorded = state.analytics.maxSpeedRecorded ?? 0;
+                    totalDistanceKm = state.analytics.totalDistanceKm ?? 0;
+                }
+
+                // Restore chart data
+                if (state.chart && chartInstance) {
+                    chartInstance.data.labels = state.chart.labels || [];
+                    chartInstance.data.datasets[0].data = state.chart.data || [];
+                    chartInstance.update('none');
+                }
+
+                // Restore map state
+                if (state.map) {
+                    currentLat = state.map.currentLat ?? 0;
+                    currentLng = state.map.currentLng ?? 0;
+                    pathCoordinates = state.map.pathCoordinates || [];
+                    gpsHasFix = state.map.gpsHasFix ?? false;
+                    previousLat = state.map.previousLat ?? null;
+                    previousLng = state.map.previousLng ?? null;
+                }
+
+                // Restore event counts
+                if (state.eventCounts) {
+                    eventCounts = state.eventCounts;
+                }
+
+                // Restore sensor states
+                if (state.sensorStates) {
+                    latestSensorStates = state.sensorStates;
+                }
+                if (state.sensors) {
+                    sensors = state.sensors;
+                }
+
+                // Restore counters
+                messageCount = state.messageCount ?? 0;
+                lastPeriodicInfoTime = state.lastPeriodicInfoTime ?? 0;
+
+                // Restore connection state
+                if (state.connection) {
+                    connectionState.connectTime = state.connection.connectTime ?? null;
+                    connectionState.elapsedSeconds = state.connection.elapsedSeconds ?? 0;
+                    connectionState.isOnline = state.connection.isOnline ?? false;
+                }
+                dataTimerStarted = state.dataTimerStarted ?? false;
+                lastDataTime = state.lastDataTime ?? Date.now();
+
+                // Restore map modes
+                isTracing = state.isTracing ?? true;
+                followMode = state.followMode ?? true;
+
+                // Restore geofence
+                if (state.geofence) {
+                    isInsideZone = state.geofence.isInsideZone ?? true;
+                }
+
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function restoreSessionUI() {
+            // Update KPI badges
+            const kpiDist = document.getElementById('kpi-dist');
+            const kpiMax = document.getElementById('kpi-max');
+            const kpiAvg = document.getElementById('kpi-avg');
+            const kpiTime = document.getElementById('kpi-time');
+            if (kpiDist) kpiDist.innerText = totalDistance.toFixed(2);
+            if (kpiMax) kpiMax.innerText = maxSpeed.toFixed(1);
+            if (kpiAvg && speedCount > 0) kpiAvg.innerText = (speedSum / speedCount).toFixed(1);
+
+            // Update event count badges
+            const countInfo = document.getElementById('count-info');
+            const countWarn = document.getElementById('count-warn');
+            const countCrit = document.getElementById('count-crit');
+            if (countInfo) countInfo.innerText = eventCounts.info;
+            if (countWarn) countWarn.innerText = eventCounts.warning;
+            if (countCrit) countCrit.innerText = eventCounts.critical;
+
+            // Restore map marker and trace
+            if (map && currentLat !== 0 && currentLng !== 0) {
+                const latLng = [currentLat, currentLng];
+                if (marker) marker.setLatLng(latLng);
+                if (polyline && pathCoordinates.length > 0) {
+                    polyline.setLatLngs(pathCoordinates);
+                }
+            }
+
+            // Restore sensor LEDs
+            updateSensorUI('s1', sensors.s1);
+            updateSensorUI('s2', sensors.s2);
+            updateSensorUI('s3', sensors.s3);
+            updateSensorUI('s4', sensors.s4);
+            updateSensorUI('mag1', sensors.mag1);
+            updateSensorUI('mag2', sensors.mag2);
+
+            // Restore trace button state
+            const traceBtn = document.getElementById('btn-trace');
+            if (traceBtn) {
+                if (isTracing) {
+                    traceBtn.classList.add('bg-indigo-50', 'ring-2', 'ring-indigo-200');
+                    traceBtn.classList.remove('bg-white');
+                } else {
+                    traceBtn.classList.remove('bg-indigo-50', 'ring-2', 'ring-indigo-200');
+                    traceBtn.classList.add('bg-white');
+                }
+            }
+
+            // Restore follow button state
+            const followBtn = document.getElementById('follow-btn');
+            const followKnob = document.getElementById('follow-knob');
+            if (followBtn && followKnob) {
+                if (followMode) {
+                    followBtn.classList.add('bg-indigo-500');
+                    followKnob.classList.add('translate-x-2.5');
+                } else {
+                    followBtn.classList.remove('bg-indigo-500');
+                    followKnob.classList.remove('translate-x-2.5');
+                }
+            }
+
+            // Restart connection timer if we were online
+            if (connectionState.isOnline && connectionState.connectTime) {
+                startConnectionTimer();
+                updateConnectionUI('connected');
+                hideOfflineIndicator();
+            }
+
+            // Render buffered records if any
+            renderBufferedData();
+        }
 
         // --- TiDB CLOUD DATA API INTEGRATION ---
         // NOTE: For production, move these values to a secure backend or environment variables.
@@ -2164,6 +2364,11 @@
             // Initialize map and chart in parallel
             initMap(); 
             initChart();
+
+            // Restore session state (map, chart, analytics, buffered records, etc.)
+            if (loadSessionState()) {
+                restoreSessionUI();
+            }
             
             // Load other things in parallel
             loadReports();
@@ -2171,6 +2376,7 @@
             
             // Disconnect cleanly when page is refreshed/closed
             window.addEventListener('beforeunload', () => {
+                saveSessionState();
                 if (client && client.isConnected && client.isConnected()) {
                     try {
                         client.disconnect();
@@ -2203,12 +2409,13 @@
             // Initialize connection handling (offline detection & timer)
             initConnectionHandling();
             
-            // Timers (watchdog disabled - was causing false alerts)
-            // setInterval(checkWatchdog, 5000); // DISABLED
+            // Timers: watchdog checks every 30s, info reports every 5 min
+            setInterval(checkWatchdog, 30000);
             setInterval(sendPeriodicTelegram, REPORT_INTERVAL); 
             setInterval(updateDuration, 1000); 
             setInterval(processTelegramQueue, 1000); // Process queue every second
             setInterval(pollTelegramUpdates, 3500);  // Poll for Telegram chat messages (AI replies)
+            setInterval(saveSessionState, 15000);    // Auto-save session every 15s
 
             // Modal Listener
             if (pdfTitleInput) {
@@ -2351,9 +2558,9 @@
                         const recent = (beh?.recentEvents || []).slice(0, 5)
                             .map(e => `• ${e.time} [${e.type}] ${e.name}: ${e.value}`).join('\n');
                         const summary =
-                            `Speeding: ${evts.speeding||0}  Harsh Braking: ${evts.harshBraking||0}\n` +
-                            `Aggressive Launch: ${evts.aggressiveLaunch||0}  Engine Lugging: ${evts.engineLugging||0}\n` +
-                            `Cold Engine: ${evts.coldEngineAbuse||0}  Excessive Idling: ${evts.excessiveIdling||0}`;
+                            `Over Speed Limit: ${evts.speeding||0}  Hard Braking: ${evts.harshBraking||0}\n` +
+                            `Fast Acceleration: ${evts.aggressiveLaunch||0}  Engine Strain: ${evts.engineLugging||0}\n` +
+                            `Cold Engine Warning: ${evts.coldEngineAbuse||0}  Long Idle: ${evts.excessiveIdling||0}`;
                         sendTelegramToChat(String(chatId),
                             `Behavior Events — ${activeDriver?.name ?? 'Active Driver'}\n${summary}\n\nRecent:\n${recent || 'No events yet'}`);
                         continue;
@@ -3086,8 +3293,8 @@
             updateConnectionUI('disconnected');
             stopConnectionTimer();
             showOfflineIndicator();
-            logReport('WARNING', 'System Not Connected', 'Could not connect to the vehicle', 0);
-            pushTechAlert('WARNING', 'System Not Connected', 'Could not reach the vehicle — check your connection');
+            logReport('WARNING', 'Connection Lost', 'Could not connect to the vehicle', 0);
+            pushTechAlert('WARNING', 'Connection Lost', 'Could not reach the vehicle — check your connection');
             
             // Reset GPS to default/waiting state
             resetGPSToDefault();
@@ -3107,8 +3314,8 @@
                 updateConnectionUI('disconnected');
                 stopConnectionTimer();
                 showOfflineIndicator();
-                logReport('WARNING', 'Device Disconnected', 'The vehicle went offline', 0);
-                pushTechAlert('WARNING', 'Device Disconnected', 'Lost contact with the vehicle');
+                logReport('WARNING', 'Vehicle Disconnected', 'The vehicle went offline', 0);
+                pushTechAlert('WARNING', 'Vehicle Disconnected', 'Lost contact with the vehicle');
                 
                 // Reset data timer flag so it will restart when data arrives again
                 dataTimerStarted = false;
@@ -3177,20 +3384,19 @@
 
             const html = `
             <div id="${alertId}" data-title="${_esc(title)}"
-                 class="toast-item ${cfg.cls} text-white mb-2">
-                <div class="px-3.5 pt-3 pb-2.5">
-                    <div class="flex items-start gap-2.5">
+                 class="toast-item ${cfg.cls}">
+                <div class="px-2.5 py-2">
+                    <div class="flex items-start gap-2">
                         <!-- Icon -->
-                        <div class="w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center"
-                             style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2)">
-                            <span class="material-symbols-outlined text-[14px]">${cfg.icon}</span>
+                        <div class="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center bg-gray-100">
+                            <span class="material-symbols-outlined text-[12px] ${cfg.color}">${cfg.icon}</span>
                         </div>
                         <!-- Body -->
                         <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-[11px] leading-tight">${_esc(title)}</p>
-                            <p class="toast-msg text-[10px] opacity-80 leading-snug mt-0.5">${_esc(message)}</p>
+                            <p class="font-semibold text-[10px] leading-tight text-gray-800">${_esc(title)}</p>
+                            <p class="toast-msg text-[9px] text-gray-500 leading-snug mt-0.5">${_esc(message)}</p>
                             ${aiInsight ? `
-                            <div class="toast-ai-insight">
+                            <div class="toast-ai-insight mt-1">
                                 <span class="toast-ai-badge">
                                     <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI
                                 </span>
@@ -3204,8 +3410,8 @@
                         </div>
                         <!-- Close -->
                         <button onclick="removeAlert('${alertId}')"
-                                class="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center opacity-60 hover:opacity-100 hover:bg-white/15 transition-all">
-                            <span class="material-symbols-outlined text-[11px]">close</span>
+                                class="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
+                            <span class="material-symbols-outlined text-[10px]">close</span>
                         </button>
                     </div>
                 </div>
@@ -3241,15 +3447,16 @@
             }
         }
 
-        // Map type string → CSS class + icon + sound flag
+        // Map type string → CSS class + icon + icon color + sound flag
         function _toastConfig(type) {
             const map = {
-                warning:  { cls: 't-critical', icon: 'warning',       sound: true  },
-                critical: { cls: 't-critical', icon: 'emergency',      sound: true  },
-                security: { cls: 't-security', icon: 'lock_open',      sound: true  },
-                success:  { cls: 't-success',  icon: 'check_circle',   sound: false },
-                info:     { cls: 't-info',     icon: 'info',           sound: false },
-                behavior: { cls: 't-warning',  icon: 'directions_car', sound: false },
+                warning:  { cls: 't-critical', icon: 'warning',        color: 'text-red-500',    sound: true  },
+                critical: { cls: 't-critical', icon: 'emergency',      color: 'text-red-500',    sound: true  },
+                security: { cls: 't-security', icon: 'lock_open',      color: 'text-violet-500', sound: true  },
+                success:  { cls: 't-success',  icon: 'check_circle',   color: 'text-emerald-500',sound: false },
+                info:     { cls: 't-info',     icon: 'info',           color: 'text-blue-500',   sound: false },
+                behavior: { cls: 't-behavior', icon: 'directions_car', color: 'text-orange-500', sound: false },
+                buffered: { cls: 't-buffered', icon: 'sd_card',        color: 'text-indigo-500', sound: true  },
             };
             return map[type] || map.info;
         }
@@ -3280,15 +3487,69 @@
                 // Audio not supported, silently fail
             }
         }
+
+        // Soft chime for buffered data uploads (pleasant 3-note notification)
+        function playBufferedSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                const masterGain = ctx.createGain();
+                masterGain.connect(ctx.destination);
+                masterGain.gain.setValueAtTime(0.12, now);
+                masterGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+                // Note 1: C5 (523Hz) — soft attack
+                const o1 = ctx.createOscillator();
+                const g1 = ctx.createGain();
+                o1.type = 'sine';
+                o1.frequency.value = 523.25;
+                o1.connect(g1);
+                g1.connect(masterGain);
+                g1.gain.setValueAtTime(0, now);
+                g1.gain.linearRampToValueAtTime(1, now + 0.05);
+                g1.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                o1.start(now);
+                o1.stop(now + 0.4);
+
+                // Note 2: E5 (659Hz)
+                const o2 = ctx.createOscillator();
+                const g2 = ctx.createGain();
+                o2.type = 'sine';
+                o2.frequency.value = 659.25;
+                o2.connect(g2);
+                g2.connect(masterGain);
+                g2.gain.setValueAtTime(0, now + 0.12);
+                g2.gain.linearRampToValueAtTime(0.85, now + 0.17);
+                g2.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+                o2.start(now + 0.12);
+                o2.stop(now + 0.6);
+
+                // Note 3: G5 (784Hz) — gentle sustain
+                const o3 = ctx.createOscillator();
+                const g3 = ctx.createGain();
+                o3.type = 'sine';
+                o3.frequency.value = 783.99;
+                o3.connect(g3);
+                g3.connect(masterGain);
+                g3.gain.setValueAtTime(0, now + 0.24);
+                g3.gain.linearRampToValueAtTime(0.7, now + 0.29);
+                g3.gain.exponentialRampToValueAtTime(0.01, now + 0.95);
+                o3.start(now + 0.24);
+                o3.stop(now + 1.0);
+            } catch (e) {
+                // Audio not supported, silently fail
+            }
+        }
         
         // ── SD Card / Buffered Data Handler ──────────────────────────────────────
         const _bufferedRecords = [];
         const BUFFERED_MAX = 100;
 
         function handleBufferedMessage(payload) {
-            // Support both nested (gps.*, sensors.*) and flat payload formats
+            // Support both nested (gps.*, sensors.*, obd.*) and flat payload formats
             const g = payload.gps     ?? {};
             const s = payload.sensors ?? {};
+            const o = payload.obd     ?? {};
             const record = {
                 device_id:          payload.device_id          ?? 'unknown',
                 original_timestamp: payload.original_timestamp ?? '—',
@@ -3304,19 +3565,41 @@
                 s2:   s.s2   ?? payload.s2   ?? null,
                 mag1: s.mag1 ?? payload.mag1 ?? null,
                 mag2: s.mag2 ?? payload.mag2 ?? null,
+                // OBD — nested takes priority, fall back to flat
+                rpm:          o.rpm          ?? payload.rpm          ?? null,
+                obd_speed:    o.speed        ?? payload.obd_speed    ?? null,
+                engine_load:  o.engine_load  ?? payload.engine_load  ?? null,
+                coolant_temp: o.coolant_temp ?? payload.coolant_temp ?? null,
+                throttle:     o.throttle     ?? payload.throttle     ?? null,
             };
             _bufferedRecords.unshift(record);
             if (_bufferedRecords.length > BUFFERED_MAX) _bufferedRecords.pop();
             renderBufferedData();
+            showAlert('buffered', 'Offline Data Received', `${_bufferedRecords.length} offline record(s) uploaded from ${record.device_id}`, 5000);
+            playBufferedSound();
             pushTechAlert('INFO', 'Offline Data Received', `${_bufferedRecords.length} offline record(s) uploaded from the vehicle`);
+            saveSessionState();
+        }
+
+        function clearBufferedData() {
+            const previousCount = _bufferedRecords.length;
+            if (previousCount === 0) return;
+            _bufferedRecords.length = 0;
+            renderBufferedData();
+            showAlert('success', 'Records Cleared', `${previousCount} offline record(s) removed`, 3000);
+            saveSessionState();
         }
 
         function renderBufferedData() {
             const list  = document.getElementById('buffered-records-list');
             const count = document.getElementById('buffered-count-badge');
+            const clearBtn = document.getElementById('buffered-clear-btn');
             if (!list) return;
 
             if (count) count.textContent = _bufferedRecords.length;
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', _bufferedRecords.length === 0);
+            }
 
             if (_bufferedRecords.length === 0) {
                 list.innerHTML = '<div id="buffered-empty" class="col-span-full text-[10px] text-gray-400 text-center py-8">No offline records yet — waiting for the vehicle to upload saved data</div>';
@@ -3406,6 +3689,36 @@
                         </a>` : ''}
                     </div>
 
+                    <!-- Engine / OBD section -->
+                    <div class="px-3 pt-1.5 pb-1.5 border-t border-gray-100">
+                        <div class="flex items-center gap-1 mb-1.5">
+                            <span class="material-symbols-outlined text-gray-400 text-sm">engineering</span>
+                            <span class="text-[9px] font-semibold text-gray-500 uppercase tracking-wide">Engine</span>
+                        </div>
+                        <div class="grid grid-cols-5 gap-1.5">
+                            <div class="bg-gray-50 rounded-lg px-1.5 py-1 flex flex-col items-center gap-0.5">
+                                <span class="text-[7px] text-gray-400 uppercase">RPM</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800">${r.rpm !== null ? r.rpm : '—'}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-1.5 py-1 flex flex-col items-center gap-0.5">
+                                <span class="text-[7px] text-gray-400 uppercase">Spd</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800">${r.obd_speed !== null ? r.obd_speed : '—'}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-1.5 py-1 flex flex-col items-center gap-0.5">
+                                <span class="text-[7px] text-gray-400 uppercase">Load</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800">${r.engine_load !== null ? r.engine_load + '%' : '—'}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-1.5 py-1 flex flex-col items-center gap-0.5">
+                                <span class="text-[7px] text-gray-400 uppercase">Temp</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800">${r.coolant_temp !== null ? r.coolant_temp + '°' : '—'}</span>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg px-1.5 py-1 flex flex-col items-center gap-0.5">
+                                <span class="text-[7px] text-gray-400 uppercase">Thr</span>
+                                <span class="text-[9px] font-mono font-bold text-gray-800">${r.throttle !== null ? r.throttle + '%' : '—'}</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Sensors section -->
                     <div class="px-3 pt-1.5 pb-3">
                         <div class="flex items-center gap-1 mb-1.5">
@@ -3428,14 +3741,14 @@
                                 </div>
                             </div>
                             <div class="border rounded-lg px-2 py-1.5 flex items-center justify-between ${m1.bg}">
-                                <span class="text-[8px] font-medium text-gray-600">Compartment 1</span>
+                                <span class="text-[8px] font-medium text-gray-600">Door 1</span>
                                 <div class="flex items-center gap-1">
                                     <span class="w-1.5 h-1.5 rounded-full ${m1.dot}"></span>
                                     <span class="text-[9px] font-bold font-mono ${m1.text}">${m1.label}</span>
                                 </div>
                             </div>
                             <div class="border rounded-lg px-2 py-1.5 flex items-center justify-between ${m2.bg}">
-                                <span class="text-[8px] font-medium text-gray-600">Compartment 2</span>
+                                <span class="text-[8px] font-medium text-gray-600">Door 2</span>
                                 <div class="flex items-center gap-1">
                                     <span class="w-1.5 h-1.5 rounded-full ${m2.dot}"></span>
                                     <span class="text-[9px] font-bold font-mono ${m2.text}">${m2.label}</span>
@@ -3459,6 +3772,10 @@
                     handleBufferedMessage(payload);
                     return;
                 }
+
+                // Reset watchdog on fresh data
+                lastDataTime = Date.now();
+                watchdogTriggered = false;
 
                 // Parse data according to ESP32 structure
                 const data = {
@@ -3498,16 +3815,16 @@
                 if (gpsHasFix && !previousGpsHasFix) {
                     // GPS just got a fix - update LOC indicator to green
                     updateDashboard({ loc: 1 });
-                    logReport('INFO', 'Location Found', 'Vehicle location is now active', data.speed);
-                    pushTechAlert('INFO', 'Location Found', 'Vehicle location is now being tracked');
+                    logReport('INFO', 'Location Active', 'Vehicle location is now active', data.speed);
+                    pushTechAlert('INFO', 'Location Active', 'Vehicle location is now being tracked');
 
                     // Daniel Cooper comes online when GPS has fix
                     updateDanielCooperStatus(true);
                 } else if (!gpsHasFix && previousGpsHasFix) {
                     // GPS lost fix
                     updateDashboard({ loc: 0 });
-                    logReport('WARNING', 'Location Signal Lost', 'Searching for vehicle location...', data.speed);
-                    pushTechAlert('WARNING', 'Location Signal Lost', 'Cannot find the vehicle — searching...');
+                    logReport('WARNING', 'Location Lost', 'Searching for vehicle location...', data.speed);
+                    pushTechAlert('WARNING', 'Location Lost', 'Cannot find the vehicle — searching...');
                     
                     // Daniel Cooper goes offline when GPS loses fix
                     updateDanielCooperStatus(false);
@@ -3516,18 +3833,18 @@
                 // Check for alerts
                 // 1. Theft Alert
                 if (data.theft_detected === true) {
-                    showAlert('warning', 'Fuel Theft Detected', 'Someone may be stealing fuel — act immediately', 10000);
-                    logReport('CRITICAL', 'Fuel Theft Detected', 'Suspicious access to the fuel — possible theft in progress', data.speed);
-                    pushTechAlert('CRITICAL', 'Fuel Theft Detected', 'Suspicious access to the fuel detected');
+                    showAlert('warning', 'Fuel Theft Alert', 'Someone may be stealing fuel — act immediately', 10000);
+                    logReport('CRITICAL', 'Fuel Theft Alert', 'Suspicious access to the fuel — possible theft in progress', data.speed);
+                    pushTechAlert('CRITICAL', 'Fuel Theft Alert', 'Suspicious access to the fuel detected');
                 }
                 
                 // 2. Security Breach Alert (mag1 or mag2 changed from 1 to 0)
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag2 !== null) {
                     if ((prevSensorStates.mag1 === 1 && data.mag1 === 0) || 
                         (prevSensorStates.mag2 === 1 && data.mag2 === 0)) {
-                        showAlert('security', 'Compartment Opened', 'A storage compartment was unexpectedly opened', 8000);
-                        logReport('WARNING', 'Compartment Opened', 'A storage compartment was opened unexpectedly', data.speed);
-                        pushTechAlert('WARNING', 'Compartment Opened', 'A storage compartment was opened');
+                        showAlert('security', 'Storage Opened', 'A storage compartment was unexpectedly opened', 8000);
+                        logReport('WARNING', 'Storage Opened', 'A storage compartment was opened unexpectedly', data.speed);
+                        pushTechAlert('WARNING', 'Storage Opened', 'A storage compartment was opened');
                     }
                 }
                 
@@ -3535,26 +3852,26 @@
                 // Logic: 1 = Closed/Normal (Orange), 0 = Open/Alert (Red)
                 if (prevSensorStates.s1 !== null && prevSensorStates.s1 === 1 && data.s1 === 0) {
                     showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
-                    logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened (sensor 1)', data.speed);
-                    pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected — sensor 1');
+                    logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
+                    pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
                 }
                 
                 if (prevSensorStates.s2 !== null && prevSensorStates.s2 === 1 && data.s2 === 0) {
                     showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
-                    logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened (sensor 2)', data.speed);
-                    pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected — sensor 2');
+                    logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
+                    pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
                 }
                 
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag1 === 1 && data.mag1 === 0) {
-                    showAlert('security', 'Compartment 1 Opened', 'A compartment was opened — check the vehicle', 6000);
-                    logReport('WARNING', 'Compartment 1 Opened', 'Compartment 1 was opened unexpectedly', data.speed);
-                    pushTechAlert('WARNING', 'Compartment 1 Opened', 'Compartment door 1 was opened');
+                    showAlert('security', 'Door 1 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    logReport('WARNING', 'Door 1 Opened', 'Door 1 was opened unexpectedly', data.speed);
+                    pushTechAlert('WARNING', 'Door 1 Opened', 'Door 1 was opened');
                 }
                 
                 if (prevSensorStates.mag2 !== null && prevSensorStates.mag2 === 1 && data.mag2 === 0) {
-                    showAlert('security', 'Compartment 2 Opened', 'A compartment was opened — check the vehicle', 6000);
-                    logReport('WARNING', 'Compartment 2 Opened', 'Compartment 2 was opened unexpectedly', data.speed);
-                    pushTechAlert('WARNING', 'Compartment 2 Opened', 'Compartment door 2 was opened');
+                    showAlert('security', 'Door 2 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    logReport('WARNING', 'Door 2 Opened', 'Door 2 was opened unexpectedly', data.speed);
+                    pushTechAlert('WARNING', 'Door 2 Opened', 'Door 2 was opened');
                 }
                 
                 // Update previous states
@@ -3590,16 +3907,17 @@
                         startConnectionTimer();
                         updateConnectionUI('connected');
                         hideOfflineIndicator();
-                        logReport('INFO', 'Tracking Started', 'Live vehicle tracking is now active', data.speed);
-                        pushTechAlert('INFO', 'Device Connected', 'Receiving live data from the vehicle');
+                        logReport('INFO', 'Tracking Active', 'Live vehicle tracking is now active', data.speed);
+                        pushTechAlert('INFO', 'Vehicle Connected', 'Receiving live data from the vehicle');
                     }
                     
                     updateVehicleLocation(data.lat, data.lng);
                 }
                 
-                // Log periodic updates (every 10th message to avoid spam)
-                if (dataTimerStarted && messageCount % 10 === 0) {
-                    logReport('INFO', 'Data Update', 'Periodic status update', data.speed);
+                // Log periodic updates every 5 minutes
+                if (dataTimerStarted && (Date.now() - lastPeriodicInfoTime > 5 * 60 * 1000)) {
+                    lastPeriodicInfoTime = Date.now();
+                    logReport('INFO', 'Status Update', 'Vehicle status is being monitored normally', data.speed);
                 }
                 messageCount++;
                 
@@ -3615,6 +3933,9 @@
                 if (data.rpm !== '--' || data.speed > 0) {
                     processActiveDriverBehavior(normalizeBehaviorTelemetry(data));
                 }
+
+                // Persist session state after processing live data
+                saveSessionState();
                 
             } catch (e) { 
                 console.error('[MQTT] Error parsing message:', e);
@@ -3815,9 +4136,9 @@
                 const currentInside = checkGeofence(lat, lng);
                 if (activeGeofence) {
                     if (isInsideZone && !currentInside) {
-                        logReport('WARNING', 'GEOFENCE BREAK', `Exited zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                        logReport('WARNING', 'Left Safe Zone', `Exited zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
                     } else if (!isInsideZone && currentInside) {
-                        logReport('INFO', 'GEOFENCE RESTORE', `Returned to zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                        logReport('INFO', 'Returned to Safe Zone', `Returned to zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
                     }
                 }
                 isInsideZone = currentInside;
@@ -3846,10 +4167,10 @@
             
             if (activeGeofence && hasFix) {
                 if (isInsideZone && !currentInside) {
-                    logReport('WARNING', 'GEOFENCE BREAK', `Exited zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-                    sendWarningAlert("WARNING", "GEOFENCE BREAK", `${lat.toFixed(4)}, ${lng.toFixed(4)}`, `Vehicle exited allowed zone.`);
+                    logReport('WARNING', 'Left Safe Zone', `Exited zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                    sendWarningAlert("WARNING", "Left Safe Zone", `${lat.toFixed(4)}, ${lng.toFixed(4)}`, `Vehicle exited allowed zone.`);
                 } else if (!isInsideZone && currentInside) {
-                    logReport('INFO', 'GEOFENCE RESTORE', `Returned to zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                    logReport('INFO', 'Returned to Safe Zone', `Returned to zone at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
                 }
             }
             isInsideZone = currentInside; 
@@ -3982,8 +4303,8 @@
                         capSpan.innerText = "OPEN ⚠";
                         capEl.className = "bg-red-50 px-2.5 py-2 rounded-lg flex flex-col items-start justify-between min-h-[56px] transition-colors border border-red-100";
                         capSpan.className = "font-mono text-sm font-bold text-red-600";
-                        sendWarningAlert("WARNING", "FUEL CAP OPEN", "OPEN", "Fuel cap is open while vehicle is active.");
-                        logReport("WARNING", "FUEL CAP OPEN", "Safety violation detected.");
+                        sendWarningAlert("WARNING", "Fuel Cap Opened", "OPEN", "Fuel cap is open while vehicle is active.");
+                        logReport("WARNING", "Fuel Cap Opened", "Safety violation detected.");
                     } else {
                         capSpan.innerText = "CLOSED";
                         capEl.className = "bg-gray-50 px-2.5 py-2 rounded-lg flex flex-col items-start justify-between min-h-[56px] transition-colors";
@@ -4002,8 +4323,8 @@
                         theftEl.className = "bg-red-50 px-2.5 py-2 rounded-lg flex flex-col items-start justify-between min-h-[56px] transition-colors border border-red-100"; 
                         theftSpan.innerText = "THEFT!";
                         theftSpan.className = "font-mono text-sm font-bold text-red-600";
-                        sendWarningAlert("CRITICAL", "FUEL THEFT", `${lat.toFixed(4)}, ${lng.toFixed(4)}`, "Rapid fuel level drop detected.");
-                        logReport("CRITICAL", "FUEL THEFT", `Rapid level drop at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                        sendWarningAlert("CRITICAL", "Fuel Theft Alert", `${lat.toFixed(4)}, ${lng.toFixed(4)}`, "Rapid fuel level drop detected.");
+                        logReport("CRITICAL", "Fuel Theft Alert", `Rapid level drop at ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
                     } else {
                         theftEl.className = "bg-gray-50 px-2.5 py-2 rounded-lg flex flex-col items-start justify-between min-h-[56px] transition-colors";
                         theftSpan.innerText = "SECURE";
@@ -4049,10 +4370,10 @@
 
             // Continuous telemetry logging so history always reflects live sensor data
             const telemetryDetails = `Speed ${speed.toFixed(1)} km/h, S1=${data.s1}, S2=${data.s2}, S3=${data.s3}, S4=${data.s4}, LOC=${locValue}, hasFix=${hasFix}`;
-            logReport('INFO', 'TELEMETRY', telemetryDetails);
+            logReport('INFO', 'Vehicle Update', telemetryDetails);
         }
 
-        // --- GEOFENCE LOGIC ---
+        // --- SAFE ZONE LOGIC ---
         function checkGeofence(lat, lng) {
             if (!activeGeofence) return true; 
             const pt = turf.point([lng, lat]); 
@@ -4301,9 +4622,14 @@
         }
 
         // --- WATCHDOG & REPORTS ---
-        // Watchdog disabled - was causing false offline alerts
         function checkWatchdog() {
-            // Disabled - no longer needed
+            const elapsed = Date.now() - lastDataTime;
+            if (elapsed > WATCHDOG_TIMEOUT && !watchdogTriggered) {
+                watchdogTriggered = true;
+                logReport('WARNING', 'No Vehicle Data', 'No data received from the vehicle for over 10 minutes', 0);
+                pushTechAlert('WARNING', 'No Vehicle Data', 'The vehicle has not sent any data for over 10 minutes — check connection');
+                showAlert('warning', 'No Vehicle Data', 'The vehicle has not sent any data for over 10 minutes', 8000);
+            }
         }
 
         function sendPeriodicTelegram() {
@@ -4533,7 +4859,8 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
                 localStorage.removeItem('sensor_reports'); 
                 eventCounts = { info: 0, warning: 0, critical: 0 };
                 countInfo.innerText = 0; countWarn.innerText = 0; countCrit.innerText = 0;
-                loadReports(); 
+                loadReports();
+                saveSessionState();
             } 
         }
 
@@ -4696,7 +5023,7 @@ RULES:
          * Called async after the toast is already shown; result is injected via _toastInjectAI().
          *
          * @param {string} toastId      - The toast element ID to inject into
-         * @param {string} eventName    - e.g. "Speeding"
+         * @param {string} eventName    - e.g. "Over Speed Limit"
          * @param {string} eventType    - "CRITICAL" | "WARNING" | "INFO"
          * @param {string} details      - human-readable value string
          * @param {Object} metrics      - { speed, rpm, throttle, coolantTemp, engineLoad }
@@ -5387,11 +5714,11 @@ RULES:
                     if (currentOrderId) {
                         // Update existing
                         window.SGUDAL.Orders.update(currentOrderId, orderData);
-                        logReport('INFO', 'Order Updated', `Order ${orderData.order_id} updated in database`);
+                        logReport('INFO', 'Delivery Updated', `Order ${orderData.order_id} updated in database`);
                     } else {
                         // Create new
                         window.SGUDAL.Orders.create(orderData);
-                        logReport('INFO', 'Order Created', `New order ${orderData.order_id} saved to database`);
+                        logReport('INFO', 'New Delivery', `New order ${orderData.order_id} saved to database`);
                     }
                     
                     // Reload from database
@@ -5430,7 +5757,7 @@ RULES:
             if (window.SGUService?.isReady()) {
                 try {
                     window.SGUDAL.Orders.delete(orderId);
-                    logReport('INFO', 'Order Deleted', `Order ${order?.order_id} deleted from database`);
+                    logReport('INFO', 'Delivery Removed', `Order ${order?.order_id} deleted from database`);
                     
                     // Reload from database
                     const dbOrders = window.SGUDAL.Orders.getAll();
@@ -5442,7 +5769,7 @@ RULES:
             } else {
                 orders = orders.filter(o => o.id !== orderId);
                 if (order) {
-                    logReport('INFO', 'Order Deleted', `Order ${order.order_id} deleted`);
+                    logReport('INFO', 'Delivery Removed', `Order ${order.order_id} deleted`);
                 }
             }
             
@@ -5714,7 +6041,7 @@ RULES:
                 connectMQTT();
             }, 500);
             
-            logReport('INFO', 'Reconnecting', 'Trying to reconnect to the vehicle...', 0);
+            logReport('INFO', 'Reconnecting...', 'Trying to reconnect to the vehicle...', 0);
         }
 
         // Follow mode toggle functionality
@@ -6249,11 +6576,11 @@ RULES:
          */
         function generateMockedRecentEvents(count) {
             const eventTypes = [
-                { name: 'Harsh Braking Detected', icon: 'priority_high', type: 'WARNING' },
-                { name: 'Speeding >110 km/h', icon: 'speed', type: 'CRITICAL' },
-                { name: 'Cold Engine High RPM', icon: 'ac_unit', type: 'WARNING' },
-                { name: 'Excessive Idling', icon: 'timer', type: 'INFO' },
-                { name: 'Aggressive Acceleration', icon: 'rocket_launch', type: 'WARNING' }
+                { name: 'Hard Braking', icon: 'priority_high', type: 'WARNING' },
+                { name: 'Over Speed Limit', icon: 'speed', type: 'CRITICAL' },
+                { name: 'Cold Engine Warning', icon: 'ac_unit', type: 'WARNING' },
+                { name: 'Long Idle', icon: 'timer', type: 'INFO' },
+                { name: 'Fast Acceleration', icon: 'rocket_launch', type: 'WARNING' }
             ];
             
             const events = [];
@@ -6650,12 +6977,12 @@ RULES:
 
             // Behavior events configuration
             const behaviorEvents = [
-                { key: 'harshBraking', label: 'Harsh Braking', icon: 'priority_high', desc: 'Sudden deceleration >15 km/h', threshold: 3 },
-                { key: 'aggressiveLaunch', label: 'Aggressive Launch', icon: 'rocket_launch', desc: 'Throttle >90% at speed <30', threshold: 2 },
-                { key: 'coldEngineAbuse', label: 'Cold Engine Abuse', icon: 'ac_unit', desc: 'RPM >3000 when coolant <70°C', threshold: 2 },
-                { key: 'engineLugging', label: 'Engine Lugging', icon: 'warning', desc: 'Load >85% at RPM <1500', threshold: 3 },
-                { key: 'excessiveIdling', label: 'Excessive Idling', icon: 'timer', desc: 'Idling >180 seconds', threshold: 5 },
-                { key: 'speeding', label: 'Speeding', icon: 'speed', desc: 'Speed >110 km/h', threshold: 2 }
+                { key: 'harshBraking', label: 'Hard Braking', icon: 'priority_high', desc: 'Sudden deceleration >15 km/h', threshold: 3 },
+                { key: 'aggressiveLaunch', label: 'Fast Acceleration', icon: 'rocket_launch', desc: 'Throttle >90% at speed <30', threshold: 2 },
+                { key: 'coldEngineAbuse', label: 'Cold Engine Warning', icon: 'ac_unit', desc: 'RPM >3000 when coolant <70°C', threshold: 2 },
+                { key: 'engineLugging', label: 'Engine Strain', icon: 'warning', desc: 'Load >85% at RPM <1500', threshold: 3 },
+                { key: 'excessiveIdling', label: 'Long Idle', icon: 'timer', desc: 'Idling >180 seconds', threshold: 5 },
+                { key: 'speeding', label: 'Over Speed Limit', icon: 'speed', desc: 'Speed >110 km/h', threshold: 2 }
             ];
 
             // Current active event
@@ -6952,17 +7279,17 @@ RULES:
 
             // Determine current event
             let currentEvent = 'Normal';
-            if (events.speeding > 0) currentEvent = 'Speeding';
-            else if (events.harshBraking > 0) currentEvent = 'Harsh Braking';
-            else if (events.aggressiveLaunch > 0) currentEvent = 'Aggressive Launch';
+            if (events.speeding > 0) currentEvent = 'Over Speed Limit';
+            else if (events.harshBraking > 0) currentEvent = 'Hard Braking';
+            else if (events.aggressiveLaunch > 0) currentEvent = 'Fast Acceleration';
 
             // Generate recent events
             const eventTypes = [
-                { name: 'Harsh Braking Detected', icon: 'priority_high', type: 'WARNING' },
-                { name: 'Speeding >110 km/h', icon: 'speed', type: 'CRITICAL' },
-                { name: 'Cold Engine High RPM', icon: 'ac_unit', type: 'WARNING' },
-                { name: 'Excessive Idling', icon: 'timer', type: 'INFO' },
-                { name: 'Aggressive Acceleration', icon: 'rocket_launch', type: 'WARNING' }
+                { name: 'Hard Braking', icon: 'priority_high', type: 'WARNING' },
+                { name: 'Over Speed Limit', icon: 'speed', type: 'CRITICAL' },
+                { name: 'Cold Engine Warning', icon: 'ac_unit', type: 'WARNING' },
+                { name: 'Long Idle', icon: 'timer', type: 'INFO' },
+                { name: 'Fast Acceleration', icon: 'rocket_launch', type: 'WARNING' }
             ];
 
             const recentEvents = [];
@@ -7082,12 +7409,12 @@ RULES:
             empty.classList.add('hidden');
 
             const iconMap = {
-                'Harsh Braking':      'priority_high',
-                'Aggressive Launch':  'rocket_launch',
-                'Cold Engine Abuse':  'ac_unit',
-                'Engine Lugging':     'warning',
-                'Excessive Idling':   'timer',
-                'Speeding':           'speed',
+                'Hard Braking':      'priority_high',
+                'Fast Acceleration':  'rocket_launch',
+                'Cold Engine Warning':  'ac_unit',
+                'Engine Strain':     'warning',
+                'Long Idle':   'timer',
+                'Over Speed Limit':           'speed',
             };
             const colorMap = {
                 CRITICAL: { bg: 'bg-rose-50',   dot: 'bg-rose-500',   text: 'text-rose-700',   badge: 'bg-rose-100 text-rose-700'   },
@@ -7238,50 +7565,50 @@ RULES:
             let eventType    = 'INFO';
             let eventDetails = '';
 
-            // 1. Harsh Braking: Speed decrease > 15 km/h in 3 seconds
+            // 1. Hard Braking: Speed decrease > 15 km/h in 3 seconds
             if (timeDelta >= 3 && b._previousSpeed > 0) {
                 const speedDiff = b._previousSpeed - (telemetry.speed || 0);
                 if (speedDiff > 15) {
                     b.events.harshBraking++;
                     eventTriggered = true;
-                    eventName    = 'Harsh Braking';
+                    eventName    = 'Hard Braking';
                     eventType    = 'WARNING';
                     eventDetails = `${speedDiff.toFixed(1)} km/h deceleration`;
                     logDriverEvent(driver, eventName, eventType, eventDetails);
                 }
             }
 
-            // 2. Aggressive Launch: Throttle > 90% while Speed < 30
+            // 2. Fast Acceleration: Throttle > 90% while Speed < 30
             if ((telemetry.throttle || 0) > 90 && (telemetry.speed || 0) < 30 && (telemetry.speed || 0) > 0) {
                 b.events.aggressiveLaunch++;
                 eventTriggered = true;
-                eventName    = 'Aggressive Launch';
+                eventName    = 'Fast Acceleration';
                 eventType    = 'WARNING';
                 eventDetails = `Throttle ${telemetry.throttle}% at ${telemetry.speed} km/h`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
-            // 3. Cold Engine Abuse: RPM > 3000 while Coolant < 70°C
+            // 3. Cold Engine Warning: RPM > 3000 while Coolant < 70°C
             if ((telemetry.rpm || 0) > 3000 && (telemetry.coolantTemp || 0) < 70 && (telemetry.coolantTemp || 0) > 0) {
                 b.events.coldEngineAbuse++;
                 eventTriggered = true;
-                eventName    = 'Cold Engine Abuse';
+                eventName    = 'Cold Engine Warning';
                 eventType    = 'WARNING';
                 eventDetails = `RPM ${telemetry.rpm} at ${telemetry.coolantTemp}°C`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
-            // 4. Engine Lugging: Load > 85% while RPM < 1500
+            // 4. Engine Strain: Load > 85% while RPM < 1500
             if ((telemetry.engineLoad || 0) > 85 && (telemetry.rpm || 0) < 1500 && (telemetry.rpm || 0) > 0) {
                 b.events.engineLugging++;
                 eventTriggered = true;
-                eventName    = 'Engine Lugging';
+                eventName    = 'Engine Strain';
                 eventType    = 'WARNING';
                 eventDetails = `Load ${telemetry.engineLoad}% at ${telemetry.rpm} RPM`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
-            // 5. Excessive Idling: Speed == 0 and RPM > 500 for > 180 seconds
+            // 5. Long Idle: Speed == 0 and RPM > 500 for > 180 seconds
             if ((telemetry.speed || 0) === 0 && (telemetry.rpm || 0) > 500) {
                 if (!b._idleStartTime) {
                     b._idleStartTime = now;
@@ -7291,7 +7618,7 @@ RULES:
                         b.events.excessiveIdling++;
                         b._idleStartTime = now; // Reset to avoid multiple counts
                         eventTriggered = true;
-                        eventName    = 'Excessive Idling';
+                        eventName    = 'Long Idle';
                         eventType    = 'INFO';
                         eventDetails = `${Math.floor(idleDuration)} seconds`;
                         logDriverEvent(driver, eventName, eventType, eventDetails);
@@ -7301,11 +7628,11 @@ RULES:
                 b._idleStartTime = null;
             }
 
-            // 6. Speeding: Speed > 110 km/h
+            // 6. Over Speed Limit: Speed > 110 km/h
             if ((telemetry.speed || 0) > 110) {
                 b.events.speeding++;
                 eventTriggered = true;
-                eventName    = 'Speeding';
+                eventName    = 'Over Speed Limit';
                 eventType    = 'CRITICAL';
                 eventDetails = `${telemetry.speed} km/h`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
@@ -7430,12 +7757,12 @@ RULES:
             }
             
             const iconMap = {
-                'Harsh Braking': 'priority_high',
-                'Aggressive Launch': 'rocket_launch',
-                'Cold Engine Abuse': 'ac_unit',
-                'Engine Lugging': 'warning',
-                'Excessive Idling': 'timer',
-                'Speeding': 'speed',
+                'Hard Braking': 'priority_high',
+                'Fast Acceleration': 'rocket_launch',
+                'Cold Engine Warning': 'ac_unit',
+                'Engine Strain': 'warning',
+                'Long Idle': 'timer',
+                'Over Speed Limit': 'speed',
                 'Normal': 'check_circle'
             };
 
@@ -7768,7 +8095,7 @@ Time: ${ts}`.trim();
 
             // Log event
             if (typeof logReport === 'function') {
-                logReport('INFO', currentDriverId ? 'Driver Updated' : 'Driver Created', 
+                logReport('INFO', currentDriverId ? 'Driver Updated' : 'New Driver Added', 
                     `${driverData.name} (${driverData.driver_id})`);
             }
         }
@@ -7833,7 +8160,7 @@ Time: ${ts}`.trim();
             renderDriverDetails();
 
             if (typeof logReport === 'function') {
-                logReport('INFO', 'Driver Deleted', `Driver ${id} deleted`);
+                logReport('INFO', 'Driver Removed', `Driver ${id} deleted`);
             }
         }
 
@@ -7843,10 +8170,10 @@ Time: ${ts}`.trim();
         });
     </script>
     
-    <!-- Global Toast Container — bottom-right stack -->
+    <!-- Global Toast Container — top-left stack -->
     <div id="alert-container"
-         class="fixed bottom-5 right-5 z-[9999] pointer-events-none flex flex-col-reverse"
-         style="max-width:340px">
+         class="fixed top-4 left-4 z-[9999] pointer-events-none flex flex-col gap-1.5"
+         style="max-width:260px">
     </div>
     <!-- Add/Edit Driver Modal -->
     <div id="driver-modal" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
