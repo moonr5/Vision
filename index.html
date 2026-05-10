@@ -1778,7 +1778,7 @@
                             </div>
                         </div>
                         <div id="tech-alerts-list" class="flex flex-col gap-1.5 max-h-52 overflow-y-auto">
-                            <div id="tech-alerts-empty" class="text-[10px] text-gray-400 text-center py-6">No technical alerts</div>
+                            <div class="text-[10px] text-gray-400 text-center py-6">No technical alerts</div>
                         </div>
                         <!-- Clear tech alerts button -->
                         <button id="tech-alerts-clear-btn" onclick="clearTechAlerts()"
@@ -1806,7 +1806,7 @@
                         </p>
                         <div class="max-h-96 overflow-y-auto pr-1">
                             <div id="buffered-records-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                                <div id="buffered-empty" class="col-span-full text-[10px] text-gray-400 text-center py-8">
+                                <div class="col-span-full text-[10px] text-gray-400 text-center py-8">
                                     No offline records yet — waiting for the vehicle to upload saved data
                                 </div>
                             </div>
@@ -5633,73 +5633,66 @@ RULES:
             return result.candidates[0]?.content?.parts?.[0]?.text || "I couldn't process that.";
         }
 
-        /** 
-         * Smart AI Response - Database first, then Gemini
+        /**
+         * Smart AI Response - Database first, then Gemini with full context
          */
         async function getAiResponse(userMessage) {
             const msg = userMessage.trim().toLowerCase();
-            
-            // 1. Try to get direct answer from database (FREE, INSTANT)
+
+            // 1. Instant database answer — no API call needed
             if (window.smartAI?.isReady()) {
                 try {
                     const directAnswer = await window.smartAI.answer(userMessage);
-                    
                     if (directAnswer) {
-                        console.log('[AI] Database answer:', directAnswer.substring(0, 50));
+                        console.log(‘[AI] Database answer:’, directAnswer.substring(0, 60));
                         return directAnswer;
                     }
                 } catch (e) {
-                    console.warn('[AI] Database query failed:', e);
+                    console.warn(‘[AI] Database query failed:’, e);
                 }
-            }
-            
-            // 2. Handle simple personal queries without AI calls
-            if (msg === 'what is your name' || msg === "what's your name" || msg === 'whats your name' || msg === 'who are you' || msg === 'your name') {
-                return "I am Monzer.";
-            }
-            if (msg === 'hi' || msg === 'hello' || msg === 'hey') {
-                return "Hello!";
-            }
-            if (msg === 'how are you' || msg === "how's it going") {
-                return "I am fine, thanks. How can I help?";
-            }
-            if (msg === 'thanks' || msg === 'thank you') {
-                return "You’re welcome.";
-            }
-            if (msg === 'bye' || msg === 'goodbye') {
-                return "Goodbye.";
-            }
-            
-            // 3. Try Python AI backend (Claude-powered, richer analysis)
-            try {
-                const fleetData = window.smartAI?.isReady() ? await window.smartAI.getData() : null;
-                const pyRes = await fetch('/api/ai/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: userMessage, context: fleetData })
-                });
-                if (pyRes.ok) {
-                    const { answer } = await pyRes.json();
-                    if (answer) return answer;
-                }
-            } catch (e) {
-                // Python backend unavailable — falling through to Gemini
             }
 
-            // 4. Use Gemini with data context for complex questions
-            try {
-                if (window.smartAI?.isReady()) {
-                    const ctx = await window.smartAI.buildGeminiContext(userMessage);
-                    const raw = await callGemini(userMessage.trim(), ctx.prompt);
-                    return sanitizeAiText(raw);
+            // 2. Simple personal queries — no API call needed
+            if (/^(what is your name|what’?s your name|who are you|your name)$/.test(msg)) return "I am Monzer.";
+            if (/^(hi|hello|hey)$/.test(msg)) return "Hello! How can I help?";
+            if (/^(how are you|how’?s it going)$/.test(msg)) return "I am fine, thanks. How can I help?";
+            if (/^(thanks|thank you)$/.test(msg)) return "You’re welcome.";
+            if (/^(bye|goodbye)$/.test(msg)) return "Goodbye.";
+
+            // 3. Build unified context: live vehicle data + fleet database
+            const liveContext = buildAiContext();
+
+            let dbSection = ‘’;
+            if (window.smartAI?.isReady()) {
+                try {
+                    dbSection = await window.smartAI.buildDbContext();
+                } catch (e) {
+                    console.warn(‘[AI] Could not build DB context:’, e);
                 }
-            } catch (e) {
-                console.warn('[AI] Gemini failed:', e);
             }
-            
-            // 4. Fallback to basic
-            const context = buildAiContext();
-            const systemPrompt = buildAiSystemPrompt(context);
+
+            const systemPrompt = `You are Monzer, a direct and helpful fleet management assistant.
+
+${dbSection}
+
+LIVE VEHICLE DATA:
+System status : ${liveContext.systemStatus}
+Last update   : ${liveContext.lastUpdate}
+Location      : lat ${liveContext.currentLocation?.lat?.toFixed(5) ?? ‘N/A’}, lng ${liveContext.currentLocation?.lng?.toFixed(5) ?? ‘N/A’}
+Speed         : ${liveContext.currentLocation?.speed ?? 0} km/h
+Distance today: ${liveContext.analytics?.dist ?? 0} km
+Max speed     : ${liveContext.analytics?.maxSpeed ?? 0} km/h
+Events today  : ${liveContext.eventCounts?.info ?? 0} info, ${liveContext.eventCounts?.warning ?? 0} warnings, ${liveContext.eventCounts?.critical ?? 0} critical
+Sensors       : ${JSON.stringify(liveContext.sensorStates ?? {})}
+${liveContext.driverBehavior ? `Active driver : ${liveContext.driverBehavior.activeDriverName} (score ${liveContext.driverBehavior.safetyScore})
+Live metrics  : speed ${liveContext.driverBehavior.liveMetrics?.speed} km/h, RPM ${liveContext.driverBehavior.liveMetrics?.rpm}, throttle ${liveContext.driverBehavior.liveMetrics?.throttle}%` : ‘Active driver : none’}
+
+RULES:
+- Answer directly using the data above — be specific with numbers
+- No introductions or "As an AI..."
+- Plain text only, no markdown, no emojis
+- 1-3 sentences max`;
+
             const raw = await callGemini(userMessage.trim(), systemPrompt);
             return sanitizeAiText(raw);
         }
@@ -8977,7 +8970,6 @@ Time: ${ts}`.trim();
 
     <!-- Database Module -->
     <script src="database/loader.js"></script>
-    <script src="database/ai-engine.js"></script>
 
     <!-- ══ Driver Event Log Modal ══════════════════════════════════ -->
     <div id="event-log-modal" class="fixed inset-0 z-[3500] hidden items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
@@ -9056,5 +9048,4 @@ Time: ${ts}`.trim();
         });
     </script>
 </body>
-<script src="database/loader.js"></script>
 </html>

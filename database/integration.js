@@ -501,7 +501,11 @@
     }
 
     function initializeSmartAI() {
-        if (typeof SmartAIEngine !== 'undefined') {
+        if (window.smartAI) {
+            // Clear cache so next answer() call fetches fresh DB data
+            window.smartAI.cache = null;
+            console.log('[DBI] SmartAI cache cleared — DB is now ready');
+        } else if (typeof SmartAIEngine !== 'undefined') {
             window.smartAI = new SmartAIEngine();
             console.log('[DBI] SmartAI initialized');
         } else {
