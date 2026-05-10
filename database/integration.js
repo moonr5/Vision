@@ -35,6 +35,9 @@
                     patchExistingFunctions();
                     initializeSampleData();
                     initializeSmartAI();
+                    if (typeof window.loadOrdersFromDB === 'function') {
+                        window.loadOrdersFromDB();
+                    }
                 } else {
                     console.warn('[DBI] Database not available, running in localStorage mode');
                 }

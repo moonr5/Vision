@@ -724,6 +724,178 @@
             from { width: 100%; }
             to   { width: 0%;   }
         }
+        /* ── AI Driver Intelligence Side Panel ───────────────────────── */
+        #ai-side-panel-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            display: flex;
+            justify-content: flex-end;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        #ai-side-panel-overlay.open {
+            pointer-events: all;
+            opacity: 1;
+        }
+        #ai-side-panel-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(3px);
+            cursor: pointer;
+        }
+        #ai-side-panel {
+            position: relative;
+            width: 380px;
+            max-width: 100vw;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: -8px 0 48px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+        #ai-side-panel-overlay.open #ai-side-panel {
+            transform: translateX(0);
+        }
+        #ai-side-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #ai-side-panel-content * { box-sizing: border-box; }
+        @media (max-width: 480px) {
+            #ai-side-panel { width: 100vw; }
+        }
+        .ai-dd-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #ffffff;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .ai-dd-header-left { display: flex; align-items: center; gap: 12px; }
+        .ai-dd-header-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg,#4f46e5,#7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 18px;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.2);
+        }
+        .ai-dd-header-title { color: #111827; font-size: 14px; font-weight: 700; }
+        .ai-dd-header-sub  { color: #9ca3af; font-size: 11px; }
+        .ai-dd-header-right { display: flex; align-items: center; gap: 10px; }
+        .ai-dd-header-pill {
+            padding: 4px 10px; border-radius: 999px;
+            background: #f3f4f6;
+            color: #374151; font-size: 10px; font-weight: 600;
+        }
+        .ai-dd-loading {
+            display: flex; align-items: center; gap: 3px;
+        }
+        .ai-dd-loading span {
+            width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(255,255,255,0.8);
+            animation: aiDotPulse 1.2s infinite ease-in-out;
+        }
+        .ai-dd-loading span:nth-child(2) { animation-delay: .15s; }
+        .ai-dd-loading span:nth-child(3) { animation-delay: .3s; }
+        @keyframes aiDotPulse {
+            0%,80%,100% { opacity: .3; transform: scale(.8); }
+            40% { opacity: 1; transform: scale(1.1); }
+        }
+        .ai-dd-body { padding: 0; }
+        .ai-dd-section {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .ai-dd-section:last-child { border-bottom: none; }
+        .ai-dd-sec-title {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: .04em;
+            color: #94a3b8; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .ai-dd-badge {
+            display: inline-block;
+            padding: 3px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 600;
+        }
+        .ai-dd-badge-green { background: #d1fae5; color: #047857; }
+        .ai-dd-badge-blue  { background: #dbeafe; color: #1d4ed8; }
+        .ai-dd-badge-amber { background: #fef3c7; color: #b45309; }
+        .ai-dd-badge-rose  { background: #fee2e2; color: #be123c; }
+        .ai-dd-badge-gray  { background: #f3f4f6; color: #374151; }
+        .ai-dd-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; font-size: 11px;
+        }
+        .ai-dd-label { color: #64748b; display: flex; align-items: center; gap: 5px; }
+        .ai-dd-value { font-weight: 600; color: #1e293b; }
+        .ai-dd-bar-bg {
+            height: 5px; background: #e2e8f0; border-radius: 3px;
+            overflow: hidden; margin-top: 5px;
+        }
+        .ai-dd-bar-fill { height: 100%; border-radius: 3px; }
+        .ai-dd-card {
+            background: #f8fafc; border-radius: 10px;
+            padding: 10px 12px; margin-top: 6px;
+        }
+        .ai-dd-prediction {
+            display: flex; align-items: center; gap: 10px;
+            padding: 7px 0;
+        }
+        .ai-dd-prediction-icon {
+            width: 28px; height: 28px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; font-size: 14px;
+        }
+        .ai-dd-prediction-text { font-size: 11px; color: #334155; font-weight: 500; }
+        .ai-dd-why-btn {
+            font-size: 9px; color: #6366f1; background: none; border: none;
+            cursor: pointer; font-weight: 600; margin-left: 4px;
+        }
+        .ai-dd-why-btn:hover { text-decoration: underline; }
+        .ai-dd-why-box {
+            display: none; margin-top: 8px; padding: 14px 16px;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            font-size: 11px; color: #4b5563; line-height: 1.6;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .ai-dd-why-box.show {
+            display: block;
+            animation: whyBoxIn 0.25s ease;
+        }
+        @keyframes whyBoxIn {
+            from { opacity: 0; transform: translateY(-3px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .ai-dd-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 22px; margin-top: 6px; }
+        .ai-dd-sparkline-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; }
+        .ai-dd-confidence { font-size: 9px; color: #94a3b8; text-align: right; margin-top: 4px; }
+        .ai-dd-summary {
+            background: linear-gradient(135deg,#eff6ff,#f5f3ff);
+            border: 1px solid #c7d2fe; border-radius: 10px;
+            padding: 10px 12px; margin: 10px 16px;
+            font-size: 11px; color: #1e293b; line-height: 1.5;
+        }
+        .ai-dd-coaching {
+            background: linear-gradient(135deg,#ecfdf5,#f0fdf4);
+            border: 1px solid #a7f3d0; border-radius: 10px;
+            padding: 10px 12px; margin: 0 16px 10px;
+            font-size: 11px; color: #064e3b; line-height: 1.5;
+        }
 
         .toast-item {
             width: 300px;
@@ -1438,7 +1610,7 @@
                     <span class="text-xs font-semibold text-red-600">Offline</span>
                 </div>
                 <!-- Reconnect Button -->
-                <button onclick="connectMQTT()" class="flex items-center gap-1 px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-medium transition-colors" title="Reconnect MQTT">
+                <button onclick="reconnectMQTT()" class="flex items-center gap-1 px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg text-xs font-medium transition-colors" title="Reconnect MQTT">
                     <span class="material-symbols-outlined text-sm">refresh</span>
                     <span class="hidden sm:inline">Reconnect</span>
                 </button>
@@ -1992,8 +2164,8 @@
                 <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 shrink-0">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-white text-sm">auto_awesome</span>
+                            <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden ring-1 ring-gray-200">
+                                <img src="z_logo.png" alt="Logo" class="w-full h-full object-cover">
                             </div>
                             <div>
                                 <h3 class="font-bold text-gray-800 text-sm">AI Analyst</h3>
@@ -2109,7 +2281,7 @@
                 <div id="driver-details-panel" class="w-[380px] bg-white border-l border-gray-100 flex flex-col overflow-hidden shrink-0 hidden lg:flex">
                     <div class="h-14 border-b border-gray-100 flex items-center justify-between px-5 shrink-0">
                         <h3 class="font-bold text-gray-800">Driver Details</h3>
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100">
+                        <button onclick="toggleAiDriverPanel(this)" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-indigo-600 transition-colors">
                             <span class="material-symbols-outlined text-sm">more_horiz</span>
                         </button>
                     </div>
@@ -4548,13 +4720,13 @@
                 return;
             }
 
-            // 2. GPS-calculated distance as fallback (only when GPS is locked)
-            if (hasGPSFix && totalDistance > 0) {
+            // 2. GPS-calculated distance as fallback (show 0.00 when GPS is locked)
+            if (hasGPSFix) {
                 elDist.innerText = totalDistance.toFixed(2);
                 return;
             }
 
-            // 3. Nothing yet
+            // 3. Nothing yet — no OBD and no GPS fix
             elDist.innerText = 'Waiting...';
         }
 
@@ -5609,28 +5781,40 @@ RULES:
             if (!enabled || !key) {
                 throw new Error("Gemini is disabled or API key missing in Settings.");
             }
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: userText }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] }
-                    })
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+            try {
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userText }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        }),
+                        signal: controller.signal
+                    }
+                );
+                clearTimeout(timeoutId);
+                const result = await response.json();
+                if (!response.ok || result.error) {
+                    const errMsg = result.error?.message || `Gemini API error (HTTP ${response.status}).`;
+                    console.error("Gemini API error:", result);
+                    throw new Error(errMsg);
                 }
-            );
-            const result = await response.json();
-            if (!response.ok || result.error) {
-                const errMsg = result.error?.message || `Gemini API error (HTTP ${response.status}).`;
-                console.error("Gemini API error:", result);
-                throw new Error(errMsg);
+                if (!result.candidates || !result.candidates.length) {
+                    const blockReason = result.promptFeedback?.blockReason || "unknown reason";
+                    throw new Error(`Request blocked by safety (${blockReason}).`);
+                }
+                return result.candidates[0]?.content?.parts?.[0]?.text || "I couldn't process that.";
+            } catch (err) {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    throw new Error("Request timed out. Please try again.");
+                }
+                throw err;
             }
-            if (!result.candidates || !result.candidates.length) {
-                const blockReason = result.promptFeedback?.blockReason || "unknown reason";
-                throw new Error(`Request blocked by safety (${blockReason}).`);
-            }
-            return result.candidates[0]?.content?.parts?.[0]?.text || "I couldn't process that.";
         }
 
         /**
@@ -5639,35 +5823,36 @@ RULES:
         async function getAiResponse(userMessage) {
             const msg = userMessage.trim().toLowerCase();
 
-            // 1. Instant database answer — no API call needed
+            // 1. Simple greetings and small talk -- answer instantly, no API call
+            if (/^(hi|hello|hey|howdy|greetings)$/.test(msg)) return "Hello! How can I help?";
+            if (/^(what is your name|who are you|your name)$/.test(msg)) return "I am Monzer.";
+            if (/^(how are you|how is it going)$/.test(msg)) return "I am fine, thanks. How can I help?";
+            if (/^(thanks?|thank you|appreciate it)$/.test(msg)) return "You're welcome!";
+            if (/^(bye|goodbye|see you|later)$/.test(msg)) return "Goodbye! Drive safe.";
+            if (/^(ok|okay|cool|nice|great)$/.test(msg)) return "Let me know if you need anything else.";
+
+            // 2. Instant database answer for fleet data queries -- no API call needed
             if (window.smartAI?.isReady()) {
                 try {
                     const directAnswer = await window.smartAI.answer(userMessage);
                     if (directAnswer) {
-                        console.log(‘[AI] Database answer:’, directAnswer.substring(0, 60));
+                        console.log('[AI] Database answer:', directAnswer.substring(0, 60));
                         return directAnswer;
                     }
                 } catch (e) {
-                    console.warn(‘[AI] Database query failed:’, e);
+                    console.warn('[AI] Database query failed:', e);
                 }
             }
-
-            // 2. Simple personal queries — no API call needed
-            if (/^(what is your name|what’?s your name|who are you|your name)$/.test(msg)) return "I am Monzer.";
-            if (/^(hi|hello|hey)$/.test(msg)) return "Hello! How can I help?";
-            if (/^(how are you|how’?s it going)$/.test(msg)) return "I am fine, thanks. How can I help?";
-            if (/^(thanks|thank you)$/.test(msg)) return "You’re welcome.";
-            if (/^(bye|goodbye)$/.test(msg)) return "Goodbye.";
 
             // 3. Build unified context: live vehicle data + fleet database
             const liveContext = buildAiContext();
 
-            let dbSection = ‘’;
+            let dbSection = '';
             if (window.smartAI?.isReady()) {
                 try {
                     dbSection = await window.smartAI.buildDbContext();
                 } catch (e) {
-                    console.warn(‘[AI] Could not build DB context:’, e);
+                    console.warn('[AI] Could not build DB context:', e);
                 }
             }
 
@@ -5678,14 +5863,14 @@ ${dbSection}
 LIVE VEHICLE DATA:
 System status : ${liveContext.systemStatus}
 Last update   : ${liveContext.lastUpdate}
-Location      : lat ${liveContext.currentLocation?.lat?.toFixed(5) ?? ‘N/A’}, lng ${liveContext.currentLocation?.lng?.toFixed(5) ?? ‘N/A’}
+Location      : lat ${liveContext.currentLocation?.lat?.toFixed(5) ?? 'N/A'}, lng ${liveContext.currentLocation?.lng?.toFixed(5) ?? 'N/A'}
 Speed         : ${liveContext.currentLocation?.speed ?? 0} km/h
 Distance today: ${liveContext.analytics?.dist ?? 0} km
 Max speed     : ${liveContext.analytics?.maxSpeed ?? 0} km/h
 Events today  : ${liveContext.eventCounts?.info ?? 0} info, ${liveContext.eventCounts?.warning ?? 0} warnings, ${liveContext.eventCounts?.critical ?? 0} critical
 Sensors       : ${JSON.stringify(liveContext.sensorStates ?? {})}
 ${liveContext.driverBehavior ? `Active driver : ${liveContext.driverBehavior.activeDriverName} (score ${liveContext.driverBehavior.safetyScore})
-Live metrics  : speed ${liveContext.driverBehavior.liveMetrics?.speed} km/h, RPM ${liveContext.driverBehavior.liveMetrics?.rpm}, throttle ${liveContext.driverBehavior.liveMetrics?.throttle}%` : ‘Active driver : none’}
+Live metrics  : speed ${liveContext.driverBehavior.liveMetrics?.speed} km/h, RPM ${liveContext.driverBehavior.liveMetrics?.rpm}, throttle ${liveContext.driverBehavior.liveMetrics?.throttle}%` : 'Active driver : none'}
 
 RULES:
 - Answer directly using the data above — be specific with numbers
@@ -5807,25 +5992,28 @@ RULES:
         // --- REAL AI CHAT LOGIC (GEMINI) ---
         function handleChatKey(e) { if(e.key === 'Enter') sendChatMessage(); }
 
+        // Prevent double-submit while AI is processing
+        let _chatProcessing = false;
+
         // Sanitize AI text so the assistant only returns clean, plain text.
         function sanitizeAiText(text) {
             if (!text) return "";
             let cleaned = String(text);
-            // Remove common markdown / formatting characters
-            cleaned = cleaned.replace(/[*_`#]/g, "");
-            // Remove common bullet symbols and list markers
-            cleaned = cleaned.replace(/[•●▪►◆■]/g, "");
-            cleaned = cleaned.replace(/^[>\-\+\*]\s*/gm, "");
-            // Strip non-ASCII characters (emojis and other symbols)
-            cleaned = cleaned.replace(/[^\t\n\r -~]/g, "");
-            // Normalize whitespace and line breaks
+            // Remove common markdown formatting characters (keep content between them)
+            cleaned = cleaned.replace(/([*_`#~])/g, "");
+            // Remove common bullet symbols
+            cleaned = cleaned.replace(/[•●▪►◆■]/g, "- ");
+            // Normalize list markers
+            cleaned = cleaned.replace(/^[>\-\+\*]\s*/gm, "- ");
+            // Keep printable ASCII and common extended chars, strip control chars and emojis
+            cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
+            // Normalize line breaks
             cleaned = cleaned.replace(/\r\n?/g, "\n");
-            cleaned = cleaned.replace(/\n{2,}/g, "\n");
-            const lines = cleaned.split('\n').map(line => line.trim()).filter(Boolean);
-            const uniqueLines = [...new Set(lines)];
-            const joined = uniqueLines.join(' ');
-            // Collapse extra spaces
-            return joined.replace(/\s{2,}/g, " ").trim();
+            // Collapse 3+ consecutive newlines to 2
+            cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+            // Trim each line but preserve intentional newlines for readability
+            const lines = cleaned.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            return lines.join('\n').trim();
         }
 
         function resetChat() {
@@ -5842,21 +6030,31 @@ RULES:
         }
 
         async function sendChatMessage() {
+            if (_chatProcessing) return;
             const userText = elChatInput.value.trim();
             if(!userText) return;
+
+            _chatProcessing = true;
 
             addChatBubble(userText, 'user');
             elChatInput.value = "";
 
             const loadingId = addChatBubble("Analyzing...", 'ai', true);
+            let loadingEl = null;
             try {
                 const cleanResponse = await getAiResponse(userText);
-                document.getElementById(loadingId).innerText = cleanResponse;
+                loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.innerText = cleanResponse || "I couldn't generate a response.";
             } catch (error) {
-                console.error("Gemini request failed:", error);
-                document.getElementById(loadingId).innerText = sanitizeAiText(error.message || "Error: Please check your API Key in Settings.");
+                console.error("AI request failed:", error);
+                loadingEl = document.getElementById(loadingId);
+                if (loadingEl) {
+                    loadingEl.innerText = sanitizeAiText(error.message) || "Error: Please check your API Key in Settings.";
+                }
             }
-            document.getElementById(loadingId).classList.remove('animate-pulse');
+            if (loadingEl) loadingEl.classList.remove('animate-pulse');
+            _chatProcessing = false;
+            if (elChatInput) elChatInput.focus();
         }
 
         function addChatBubble(text, type, isLoading = false) {
@@ -5897,6 +6095,9 @@ RULES:
                         console.log('[ORDERS] Database empty, seeding with sample orders...');
                         seedOrdersInDB();
                         orders = window.SGUDAL.Orders.getAll();
+                        if (orders.length === 0) {
+                            orders = defaultMockedOrders.map(o => formatOrderFromDB(o));
+                        }
                     } else {
                         orders = dbOrders;
                     }
@@ -8007,6 +8208,356 @@ RULES:
         /**
          * Format idle time in seconds to readable format
          */
+
+        /**
+         * ==================================================================
+         * AI DRIVER INTELLIGENCE PANEL
+         * ==================================================================
+         */
+
+        // Active panel element reference
+
+        /**
+         * AI Driver Intelligence Side Panel
+         */
+        let _aiPanelDriverId = null;
+
+        function toggleAiDriverPanel(button) {
+            const overlay = document.getElementById('ai-side-panel-overlay');
+            if (overlay.classList.contains('open')) {
+                closeAiDriverPanel();
+                return;
+            }
+
+            const driver = drivers.find(d => d.id === selectedDriverId);
+            if (!driver) return;
+
+            _aiPanelDriverId = driver.id;
+            const content = document.getElementById('ai-side-panel-content');
+            const insights = computeAiDriverInsights(driver);
+            buildAiDropdown(content, driver, insights, null, true);
+            overlay.classList.add('open');
+
+            const escHandler = function(e) {
+                if (e.key === 'Escape') { closeAiDriverPanel(); document.removeEventListener('keydown', escHandler); }
+            };
+            document.addEventListener('keydown', escHandler);
+
+            fetchAiDriverAnalysis(driver, insights).then(aiResult => {
+                if (_aiPanelDriverId === driver.id) buildAiDropdown(content, driver, insights, aiResult, false);
+            }).catch(err => {
+                console.warn('[AI Panel] Backend unavailable:', err);
+            });
+        }
+
+        function closeAiDriverPanel() {
+            const overlay = document.getElementById('ai-side-panel-overlay');
+            overlay.classList.remove('open');
+            _aiPanelDriverId = null;
+        }
+
+        async function fetchAiDriverAnalysis(driver, insights) {
+            const b = driver.behavior || {};
+            const m = b.liveMetrics || {};
+            const ctx = {
+                driverName: driver.name,
+                safetyScore: b.safetyScore,
+                classification: insights.classification,
+                fuelStatus: insights.fuelStatus,
+                riskLevel: insights.riskLevel,
+                maintenanceStatus: insights.maintStatus,
+                events: b.events || {},
+                liveMetrics: { speed: m.speed, rpm: m.rpm, throttle: m.throttle, coolantTemp: m.coolantTemp, engineLoad: m.engineLoad, idleTime: m.idleTime },
+                totalEvents: insights.totalEvents,
+                fleetRank: insights.fleetRank,
+                fleetPercentile: insights.fleetPercentile
+            };
+            const res = await fetch('/api/ai/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: `Analyze this fleet driver. Provide a concise 1-sentence behavioral summary, the top 2 predictive maintenance warnings, and a 1-sentence coaching recommendation. Respond in this exact JSON format: {"summary":"...","predictions":["...","..."],"coaching":"..."}`,
+                    context: ctx
+                })
+            });
+            if (!res.ok) throw new Error('AI backend ' + res.status);
+            const data = await res.json();
+            let parsed = null;
+            try { const m = (data.answer || '').match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch (_) {}
+            return {
+                summary: parsed?.summary || data.answer?.substring(0, 140) || 'Analysis complete.',
+                predictions: parsed?.predictions || [],
+                coaching: parsed?.coaching || '',
+                raw: data.answer
+            };
+        }
+
+        function computeAiDriverInsights(driver) {
+            const b = driver.behavior || generateSampleBehaviorData();
+            const ev = b.events || {};
+            const m = b.liveMetrics || {};
+            const scores = b.weeklyScores || [80,80,80,80,80,80,80];
+            const e = { harshBraking: ev.harshBraking||0, aggressiveLaunch: ev.aggressiveLaunch||0, coldEngineAbuse: ev.coldEngineAbuse||0, engineLugging: ev.engineLugging||0, excessiveIdling: ev.excessiveIdling||0, speeding: ev.speeding||0 };
+            const totalEvents = Object.values(e).reduce((a,v)=>a+v,0);
+
+            const aggScore = e.harshBraking*3 + e.aggressiveLaunch*3 + e.speeding*4 + (m.throttle>70?2:0);
+            const ecoScore = (m.throttle<40?3:0) + (e.excessiveIdling===0?2:0) + (m.rpm<2500?2:0);
+            const defScore = (e.harshBraking===0&&e.aggressiveLaunch===0?4:0) + (e.speeding===0?3:0);
+            const effScore = (e.excessiveIdling<2?2:0) + (e.engineLugging<2?2:0) + (m.engineLoad<60?2:0);
+
+            let cls = 'Balanced Driver';
+            if (aggScore>=8) cls='Aggressive Driver';
+            else if (aggScore>=5&&b.safetyScore<70) cls='High-Risk Driver';
+            else if (ecoScore>=5&&aggScore<=2) cls='Eco Driver';
+            else if (defScore>=5&&aggScore<=1) cls='Defensive Driver';
+            else if (effScore>=4&&aggScore<=3) cls='Efficient Driver';
+
+            let fuelSt='Moderate Fuel Usage', fuelEff=50+Math.round((100-b.safetyScore)*0.3);
+            if (aggScore>=6||e.excessiveIdling>=3){fuelSt='Fuel Waste Detected';fuelEff=Math.max(10,40-aggScore*3);}
+            else if (ecoScore>=5&&e.excessiveIdling<=1){fuelSt='Fuel Efficient';fuelEff=Math.min(95,75+ecoScore*3);}
+            else if (e.excessiveIdling>=2){fuelSt='Excessive Idle Time';fuelEff=Math.max(15,45-e.excessiveIdling*5);}
+            else if (m.throttle>75){fuelSt='Aggressive Throttle Usage';fuelEff=Math.max(20,50-(m.throttle-75));}
+            const fleetAvg=52, fuelDiff=fuelEff-fleetAvg, fuelWaste=Math.max(0,Math.round((fleetAvg-fuelEff)*0.8)), fuelSave=Math.max(0,Math.round((fuelEff-fleetAvg)*1.2));
+
+            let riskLv='Low Risk', riskSc=Math.max(0,Math.min(100,100-b.safetyScore+totalEvents*2));
+            const danger=e.harshBraking+e.aggressiveLaunch+e.speeding;
+            if (riskSc>=75||danger>=5){riskLv='Critical Risk';}
+            else if (riskSc>=55||danger>=3){riskLv='High Risk';}
+            else if (riskSc>=35||danger>=1){riskLv='Medium Risk';}
+            const accProb=Math.min(25,Math.round(riskSc*0.18));
+
+            let maintSt='Low Vehicle Stress', maintSc=Math.max(0,Math.min(100,b.safetyScore-e.coldEngineAbuse*4-e.engineLugging*3-(m.rpm>4000?8:0)-(m.engineLoad>80?5:0)));
+            if (m.rpm>4500||e.coldEngineAbuse>=3) maintSt='Engine Stress Detected';
+            else if (e.harshBraking>=3||(m.throttle>80&&e.harshBraking>=2)) maintSt='Brake Wear Risk';
+            else if (e.engineLugging>=4||m.engineLoad>85) maintSt='Transmission Abuse Risk';
+            else if (maintSc<60) maintSt='High Maintenance Impact';
+            else if (maintSc<80) maintSt='Moderate Wear';
+            const maintCost=Math.max(0,Math.round((100-maintSc)*1.5));
+
+            let train='No Training Needed';
+            if (cls==='High-Risk Driver'||riskLv==='Critical Risk'||riskLv==='High Risk') train='High-Risk Driver Coaching Needed';
+            else if (fuelSt==='Fuel Waste Detected'||fuelSt==='Excessive Idle Time') train='Eco-Driving Training Recommended';
+            else if (riskLv==='Medium Risk'||cls==='Aggressive Driver') train='Safety Coaching Recommended';
+
+            const routeEff=Math.round(b.safetyScore*0.9), stopFreq=Math.round(totalEvents*0.8+2);
+            const bestRoute=aggScore<3?'Highway routes':'Urban short-haul';
+            const worstRoute=e.excessiveIdling>2?'Peak-hour urban':'Mountain/steep grades';
+
+            const allScores=drivers.map(d=>d.behavior?.safetyScore||75).sort((a,b)=>b-a);
+            const rIdx=allScores.indexOf(b.safetyScore);
+            const fRank=rIdx>=0?rIdx+1:Math.floor(drivers.length/2);
+            const fPct=Math.round((1-(fRank-1)/Math.max(1,drivers.length))*100);
+            let rLabel='Average Performance';
+            if (fPct>=95) rLabel='Top 5% Driver'; else if (fPct>=80) rLabel='Above Fleet Average'; else if (fPct<=30) rLabel='Below Fleet Average';
+            const trend=scores[scores.length-1]-scores[0];
+
+            const preds=[];
+            if (e.harshBraking>=3) preds.push({icon:'warning',bg:'#fff7ed',color:'#ea580c',text:'Brake Maintenance Likely Soon'});
+            if (m.rpm>3500||e.coldEngineAbuse>=2) preds.push({icon:'engineering',bg:'#fef2f2',color:'#dc2626',text:'Engine Stress Increasing'});
+            if (e.engineLugging>=3) preds.push({icon:'settings',bg:'#fff7ed',color:'#f59e0b',text:'Transmission Stress Detected'});
+            if (preds.length===0){ if (maintSc>=85) preds.push({icon:'check_circle',bg:'#ecfdf5',color:'#059669',text:'Engine Health Stable'}); if (b.safetyScore>=85) preds.push({icon:'trending_up',bg:'#eff6ff',color:'#3b82f6',text:'Performance Trend Positive'}); }
+            if (preds.length===0) preds.push({icon:'remove_road',bg:'#f9fafb',color:'#6b7280',text:'Tire Wear Monitoring Active'});
+
+            return {
+                classification:cls, fuelStatus:fuelSt, fuelEfficiencyPct:fuelEff, fuelDiff, fuelWasteEst:fuelWaste, fuelSavingsPot:fuelSave,
+                riskLevel:riskLv, riskScore:riskSc, accidentProb:accProb, dangerousEvents:danger,
+                maintStatus:maintSt, maintScore:maintSc, maintCostIncrease:maintCost,
+                trainingRec:train, routeEfficiency:routeEff, stopFreq, bestRouteType:bestRoute, worstRouteType:worstRoute,
+                fleetRank:fRank, fleetPercentile:fPct, rankLabel:rLabel, trend,
+                predictions:preds, scores, totalEvents,
+                whyData: {
+                    classification: `Based on ${totalEvents} events: ${e.harshBraking} hard braking, ${e.aggressiveLaunch} aggressive accelerations, ${e.speeding} speeding, ${e.excessiveIdling} idle.`,
+                    fuel: `Throttle avg ${m.throttle}%, idle ${formatIdleTime(m.idleTime||0)}, ${e.harshBraking} harsh braking events.`,
+                    risk: `${danger} dangerous events. Harsh braking increases collision risk by ${Math.min(40,danger*8)}%.`,
+                    maintenance: `RPM peaked at ${m.rpm}, engine load ${m.engineLoad}%. Cold engine abuse: ${e.coldEngineAbuse} times.`,
+                    training: cls==='High-Risk Driver'?'Driver exhibits multiple high-risk patterns requiring immediate intervention.':(fuelSt==='Fuel Waste Detected'?'Fuel waste patterns indicate opportunity for eco-driving coaching.':'Current behavior is within acceptable parameters.')
+                }
+            };
+        }
+
+        function buildAiDropdown(container, driver, ai, aiResult, loading) {
+            container.innerHTML = '';
+
+            // Header
+            const header = document.createElement('div');
+            header.className = 'ai-dd-header';
+            header.innerHTML = `
+                <div class="ai-dd-header-left">
+                    <div class="ai-dd-header-icon"><span class="material-symbols-outlined" style="font-size:18px">psychology</span></div>
+                    <div>
+                        <div class="ai-dd-header-title">AI Intelligence</div>
+                        <div class="ai-dd-header-sub">${driver.name}</div>
+                    </div>
+                </div>
+                <div class="ai-dd-header-right">
+                    ${loading?'<div class="ai-dd-loading"><span></span><span></span><span></span></div>':''}
+                    <span class="ai-dd-header-pill">${ai.fleetPercentile}%ile</span>
+                    <button onclick="closeAiDriverPanel()" style="width:28px;height:28px;border-radius:8px;background:#f3f4f6;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0;transition:background .2s" onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'" title="Close">
+                        <span class="material-symbols-outlined" style="font-size:16px">close</span>
+                    </button>
+                </div>`;
+            container.appendChild(header);
+
+            const body = document.createElement('div');
+            body.className = 'ai-dd-body';
+            container.appendChild(body);
+
+            // AI Summary from backend
+            if (aiResult && aiResult.summary) {
+                const sum = document.createElement('div');
+                sum.className = 'ai-dd-summary';
+                sum.innerHTML = `<strong style="color:#4f46e5">AI Summary:</strong> ${escapeHtml(aiResult.summary)}`;
+                body.appendChild(sum);
+            }
+
+            // Classification
+            body.appendChild(makeSection('Driver Classification', 'person_search', (sec) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;';
+                const badgeClass = 'ai-dd-badge-' + (ai.classification==='Eco Driver'?'green':ai.classification==='Defensive Driver'?'blue':ai.classification==='Aggressive Driver'||ai.classification==='High-Risk Driver'?'rose':'gray');
+                row.innerHTML = `<span class="ai-dd-badge ${badgeClass}">${ai.classification}</span>` + makeWhyBtn('why-class', ai.whyData.classification);
+                sec.appendChild(row);
+                sec.appendChild(makeSparkline(ai.scores, ai.scores[ai.scores.length-1]>=80?'#34d399':ai.scores[ai.scores.length-1]>=60?'#fbbf24':'#f87171'));
+                const conf = document.createElement('div');
+                conf.className = 'ai-dd-confidence';
+                conf.textContent = 'AI Confidence: ' + Math.min(97, 85 + Math.floor(ai.totalEvents*1.5)) + '%';
+                sec.appendChild(conf);
+            }));
+
+            // Fuel
+            body.appendChild(makeSection('Fuel Intelligence', 'local_gas_station', (sec) => {
+                const fbc = ai.fuelStatus==='Fuel Efficient'?'green':ai.fuelStatus==='Fuel Waste Detected'||ai.fuelStatus==='Aggressive Throttle Usage'?'rose':'amber';
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px;';
+                row.innerHTML = `<span class="ai-dd-badge ai-dd-badge-${fbc}">${ai.fuelStatus}</span>` + makeWhyBtn('why-fuel', ai.whyData.fuel);
+                sec.appendChild(row);
+                sec.appendChild(makeRow('water_drop', 'Efficiency vs Fleet', (ai.fuelDiff>=0?'+':'')+ai.fuelDiff+'%', ai.fuelDiff>=0?'#059669':'#dc2626'));
+                sec.appendChild(makeRow('savings', 'Savings Potential', ai.fuelSavingsPot>0?'+'+ai.fuelSavingsPot+'%':'N/A', '#059669'));
+                sec.appendChild(makeRow('delete', 'Waste Estimate', ai.fuelWasteEst>0?ai.fuelWasteEst+'%':'None', ai.fuelWasteEst>0?'#dc2626':'#64748b'));
+            }));
+
+            // Risk
+            body.appendChild(makeSection('Risk Analysis', 'gpp_maybe', (sec) => {
+                const rbc = ai.riskLevel==='Low Risk'?'green':ai.riskLevel==='Medium Risk'?'amber':'rose';
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;';
+                row.innerHTML = `<span class="ai-dd-badge ai-dd-badge-${rbc}">${ai.riskLevel}</span>` + makeWhyBtn('why-risk', ai.whyData.risk);
+                sec.appendChild(row);
+                sec.appendChild(makeBar('Risk Score', ai.riskScore, ai.riskScore>=70?'#f43f5e':ai.riskScore>=40?'#f59e0b':'#10b981'));
+                sec.appendChild(makeRow('crash', 'Accident Probability', ai.accidentProb+'%', ai.accidentProb>=15?'#dc2626':'#d97706'));
+                sec.appendChild(makeRow('warning', 'Dangerous Events', ai.dangerousEvents+'', ai.dangerousEvents>=3?'#dc2626':'#1e293b'));
+            }));
+
+            // Maintenance
+            body.appendChild(makeSection('Maintenance Impact', 'build', (sec) => {
+                const mbc = ai.maintStatus==='Low Vehicle Stress'?'green':ai.maintStatus==='Moderate Wear'?'amber':'rose';
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;';
+                row.innerHTML = `<span class="ai-dd-badge ai-dd-badge-${mbc}">${ai.maintStatus}</span>` + makeWhyBtn('why-maint', ai.whyData.maintenance);
+                sec.appendChild(row);
+                sec.appendChild(makeBar('Health Score', ai.maintScore, ai.maintScore>=80?'#10b981':ai.maintScore>=60?'#f59e0b':'#f43f5e'));
+                sec.appendChild(makeRow('payments', 'Cost Increase', ai.maintCostIncrease>0?'+'+ai.maintCostIncrease+'%':'Baseline', ai.maintCostIncrease>15?'#dc2626':'#1e293b'));
+            }));
+
+            // Training
+            body.appendChild(makeSection('Training Recommendations', 'school', (sec) => {
+                const tIcon = ai.trainingRec==='No Training Needed'?'check_circle':'school';
+                const tBg = ai.trainingRec==='No Training Needed'?'#d1fae5':ai.trainingRec.includes('High-Risk')?'#fee2e2':'#fef3c7';
+                const tColor = ai.trainingRec==='No Training Needed'?'#047857':ai.trainingRec.includes('High-Risk')?'#be123c':'#b45309';
+                const card = document.createElement('div');
+                card.className = 'ai-dd-card';
+                card.style.cssText = 'display:flex;align-items:center;gap:10px;';
+                card.innerHTML = `
+                    <div style="width:32px;height:32px;border-radius:8px;background:${tBg};color:${tColor};display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="material-symbols-outlined" style="font-size:16px">${tIcon}</span></div>
+                    <div>
+                        <div style="font-size:11px;font-weight:600;color:#1e293b">${ai.trainingRec}</div>
+                        <div style="font-size:9px;color:#64748b">${ai.trainingRec==='No Training Needed'?'Behavior within acceptable range':'Recommended based on trend analysis'}</div>
+                    </div>`;
+                sec.appendChild(card);
+            }));
+
+            // Route
+            body.appendChild(makeSection('Route Intelligence', 'route', (sec) => {
+                sec.appendChild(makeRow('speed', 'Route Efficiency', ai.routeEfficiency+'%', '#1e293b'));
+                sec.appendChild(makeRow('stop_circle', 'Stop Frequency', ai.stopFreq+' / trip', '#1e293b'));
+                sec.appendChild(makeRow('check_circle', 'Best Routes', ai.bestRouteType, '#059669'));
+                sec.appendChild(makeRow('cancel', 'Avoid Routes', ai.worstRouteType, '#dc2626'));
+            }));
+
+            // Ranking
+            body.appendChild(makeSection('Fleet Ranking', 'emoji_events', (sec) => {
+                sec.appendChild(makeBar(ai.rankLabel + '  |  #' + ai.fleetRank + ' of ' + drivers.length, ai.fleetPercentile, 'linear-gradient(90deg,#4f46e5,#7c3aed)'));
+                const tIcon = ai.trend>5?'trending_up':ai.trend<-5?'trending_down':'trending_flat';
+                const tColor = ai.trend>5?'#059669':ai.trend<-5?'#dc2626':'#64748b';
+                sec.appendChild(makeRow(tIcon, '7-Day Trend', (ai.trend>0?'+':'')+ai.trend, tColor));
+            }));
+
+            // Coaching from backend
+            if (aiResult && aiResult.coaching) {
+                const coach = document.createElement('div');
+                coach.className = 'ai-dd-coaching';
+                coach.innerHTML = `<strong>AI Coaching:</strong> ${escapeHtml(aiResult.coaching)}`;
+                body.appendChild(coach);
+            }
+
+            // Predictions
+            body.appendChild(makeSection('AI Predictions', 'crystal_ball', (sec) => {
+                const list = aiResult && aiResult.predictions && aiResult.predictions.length ? aiResult.predictions.map(p => ({
+                    icon: 'neurology', bg: '#eff6ff', color: '#4f46e5', text: p
+                })) : ai.predictions;
+                list.forEach(p => {
+                    const row = document.createElement('div');
+                    row.className = 'ai-dd-prediction';
+                    row.innerHTML = `
+                        <div class="ai-dd-prediction-icon" style="background:${p.bg};color:${p.color}"><span class="material-symbols-outlined" style="font-size:16px">${p.icon}</span></div>
+                        <div class="ai-dd-prediction-text">${escapeHtml(p.text)}</div>`;
+                    sec.appendChild(row);
+                });
+            }));
+        }
+
+        function makeSection(title, icon, builder) {
+            const sec = document.createElement('div');
+            sec.className = 'ai-dd-section';
+            const ttl = document.createElement('div');
+            ttl.className = 'ai-dd-sec-title';
+            ttl.innerHTML = `<span class="material-symbols-outlined" style="font-size:13px">${icon}</span>${title}`;
+            sec.appendChild(ttl);
+            builder(sec);
+            return sec;
+        }
+        function makeRow(matIcon, label, value, valueColor) {
+            const row = document.createElement('div');
+            row.className = 'ai-dd-row';
+            row.innerHTML = `<span class="ai-dd-label"><span class="material-symbols-outlined" style="font-size:13px;color:#94a3b8">${matIcon}</span>${label}</span><span class="ai-dd-value" style="color:${valueColor}">${escapeHtml(value)}</span>`;
+            return row;
+        }
+        function makeBar(label, value, color) {
+            const wrap = document.createElement('div');
+            wrap.style.marginBottom = '8px';
+            wrap.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px"><span style="font-size:10px;color:#64748b">${escapeHtml(label)}</span><span style="font-size:10px;font-weight:700;color:${typeof color==='string'&&color.startsWith('#')?color:'#1e293b'}">${value}</span></div><div class="ai-dd-bar-bg"><div class="ai-dd-bar-fill" style="width:${Math.min(100,value)}%;background:${color}"></div></div>`;
+            return wrap;
+        }
+        function makeSparkline(values, color) {
+            const max = Math.max(...values, 1);
+            const wrap = document.createElement('div');
+            wrap.className = 'ai-dd-sparkline';
+            values.forEach(v => {
+                const bar = document.createElement('div');
+                bar.className = 'ai-dd-sparkline-bar';
+                bar.style.height = Math.max(3, Math.round(v/max*20)) + 'px';
+                bar.style.background = color;
+                wrap.appendChild(bar);
+            });
+            return wrap;
+        }
+        function makeWhyBtn(id, text) {
+            return `<button class="ai-dd-why-btn" onclick="event.stopPropagation();var el=document.getElementById('${id}');if(el)el.classList.toggle('show')">Why?</button><div id="${id}" class="ai-dd-why-box">${escapeHtml(text)}</div>`;
+        }
+        function escapeHtml(t) {
+            if (!t) return '';
+            return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
         function formatIdleTime(seconds) {
             if (seconds < 60) return `${seconds}s`;
             const mins = Math.floor(seconds / 60);
@@ -8965,6 +9516,14 @@ Time: ${ts}`.trim();
                     <button type="submit" class="px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-semibold transition-colors">Save Driver</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- AI Driver Intelligence Side Panel -->
+    <div id="ai-side-panel-overlay">
+        <div id="ai-side-panel-backdrop" onclick="closeAiDriverPanel()"></div>
+        <div id="ai-side-panel">
+            <div id="ai-side-panel-content"></div>
         </div>
     </div>
 
