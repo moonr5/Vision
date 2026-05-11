@@ -1733,15 +1733,6 @@
                             <span class="material-symbols-outlined text-lg">delete</span>
                         </button>
                         <div class="w-px h-2 bg-gray-200 mx-auto"></div>
-                        <!-- Clear Track (persistent) -->
-                        <button onclick="showMapConfirm('Clear Track','This will permanently delete all saved route history, coordinates, and alerts. This action cannot be undone.','Clear Track','danger',clearMapHistory)" class="map-ctrl-btn danger" title="Clear all saved route history">
-                            <span class="material-symbols-outlined text-sm">delete_sweep</span>Clear Track
-                        </button>
-                        <!-- Reset Session -->
-                        <button onclick="showMapConfirm('Reset Session','This will archive the current trip and start a fresh tracking session. Old data is saved in trip archive.','Reset Session','blue',resetTripSession)" class="map-ctrl-btn action" title="Archive trip and start fresh">
-                            <span class="material-symbols-outlined text-sm">restart_alt</span>Reset Session
-                        </button>
-                        <div class="w-px h-2 bg-gray-200 mx-auto"></div>
                         <!-- Center on Location -->
                         <button onclick="centerOnLocation()" class="w-9 h-9 map-button flex items-center justify-center text-gray-600 hover:text-indigo-600" title="Center on Current Location">
                             <span class="material-symbols-outlined text-lg">my_location</span>
@@ -1769,10 +1760,18 @@
                     <div class="flex-1 flex items-center gap-4">
                         <!-- Coordinates -->
                         <div class="flex-1 bg-gray-50 rounded-xl p-3">
-                            <div class="flex items-center gap-2 mb-2">
+                            <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-1.5">
                                     <div id="sensor-loc" class="w-2 h-2 rounded-full bg-slate-300"></div>
                                     <span class="text-[9px] text-gray-500 uppercase">LOC</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="showMapConfirm('Clear Track','This will permanently delete all saved route history, coordinates, and alerts. This action cannot be undone.','Clear Track','danger',clearMapHistory)" class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors" title="Clear all saved route history">
+                                        <span class="material-symbols-outlined" style="font-size:11px;line-height:1">delete_sweep</span>Clear
+                                    </button>
+                                    <button onclick="showMapConfirm('Reset Session','This will archive the current trip and start a fresh tracking session. Old data is saved in trip archive.','Reset Session','blue',resetTripSession)" class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors" title="Archive trip and start fresh">
+                                        <span class="material-symbols-outlined" style="font-size:11px;line-height:1">restart_alt</span>Reset
+                                    </button>
                                 </div>
                             </div>
                             <div class="flex gap-4">
@@ -3082,8 +3081,9 @@
             _mapConfirmCallback = null;
         }
         function onMapConfirmOk() {
-            if (typeof _mapConfirmCallback === 'function') _mapConfirmCallback();
+            const cb = _mapConfirmCallback;
             hideMapConfirm();
+            if (typeof cb === 'function') cb();
         }
 
         function restoreSessionUI() {
@@ -3863,11 +3863,20 @@
         function initMap() {
             if (typeof L === 'undefined') { setTimeout(initMap, 500); return; }
             
-            // Initialize map with better options
-            map = L.map('map', { 
+            // Initialize map with better options — restore last saved position if available
+            const _savedMapView = (() => { try { return JSON.parse(localStorage.getItem('sgu_map_view')); } catch(e) { return null; } })();
+            const _initView = (_savedMapView && _savedMapView.lat && _savedMapView.lng && _savedMapView.zoom)
+                ? _savedMapView : DEFAULT_VIEW;
+            map = L.map('map', {
                 attributionControl: false,
                 zoomControl: false
-            }).setView([DEFAULT_VIEW.lat, DEFAULT_VIEW.lng], DEFAULT_VIEW.zoom);
+            }).setView([_initView.lat, _initView.lng], _initView.zoom);
+
+            // Persist map position on every move/zoom
+            map.on('moveend zoomend', function() {
+                const c = map.getCenter();
+                localStorage.setItem('sgu_map_view', JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom() }));
+            });
             
             // Add zoom control to bottom-right
             L.control.zoom({ position: 'bottomright' }).addTo(map);
