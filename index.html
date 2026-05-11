@@ -921,19 +921,19 @@
             position: relative;
             display: flex;
             align-items: flex-start;
-            padding-left: 20px;
+            padding-left: 30px;
         }
         .toast-avatar {
-            width: 40px;
-            height: 40px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             overflow: hidden;
             flex-shrink: 0;
             position: absolute;
-            left: -4px;
-            top: 4px;
-            border: 2.5px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            left: -6px;
+            top: 2px;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.20);
             z-index: 2;
         }
         .toast-avatar img {
@@ -944,20 +944,19 @@
         .toast-bubble {
             flex: 1;
             min-width: 0;
-            background: #fff;
-            border-radius: 4px 18px 18px 4px;
-            padding: 8px 12px 8px 28px;
+            background: #fff8e1;
+            border-radius: 0 44px 44px 0;
+            padding: 10px 18px 10px 38px;
             position: relative;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
-        /* Type-colored left accent on bubble */
-        .toast-item.t-critical .toast-bubble { border-left: 3px solid #ef4444; }
-        .toast-item.t-warning  .toast-bubble { border-left: 3px solid #f59e0b; }
-        .toast-item.t-info     .toast-bubble { border-left: 3px solid #3b82f6; }
-        .toast-item.t-success  .toast-bubble { border-left: 3px solid #10b981; }
-        .toast-item.t-security .toast-bubble { border-left: 3px solid #8b5cf6; }
-        .toast-item.t-buffered .toast-bubble { border-left: 3px solid #6366f1; }
-        .toast-item.t-behavior .toast-bubble { border-left: 3px solid #f97316; }
+        /* Type-specific bubble background */
+        .toast-item.t-critical .toast-bubble { background: #fff1f2; }
+        .toast-item.t-warning  .toast-bubble { background: #fffbeb; }
+        .toast-item.t-info     .toast-bubble { background: #eff6ff; }
+        .toast-item.t-success  .toast-bubble { background: #f0fdf4; }
+        .toast-item.t-security .toast-bubble { background: #f5f3ff; }
+        .toast-item.t-buffered .toast-bubble { background: #eef2ff; }
+        .toast-item.t-behavior .toast-bubble { background: #fff7ed; }
         .toast-title {
             font-size: 11px;
             font-weight: 600;
@@ -972,14 +971,16 @@
         }
         .toast-user {
             display: inline-block;
-            margin-top: 4px;
             font-size: 9px;
             font-weight: 700;
+            font-style: normal;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            padding: 2px 8px;
-            border-radius: 0 0 10px 10px;
+            letter-spacing: 0.05em;
+            padding: 2px 10px 2px 10px;
+            border-radius: 0 0 10px 0;
             background: #fff;
+            color: #83aebd;
+            white-space: nowrap;
         }
         .toast-item.t-critical .toast-user { color: #ef4444; }
         .toast-item.t-warning  .toast-user { color: #f59e0b; }
@@ -1028,22 +1029,61 @@
             animation: toastProgress linear forwards;
         }
         .toast-ai-insight {
-            font-size: 9px;
-            line-height: 1.3;
-            color: #64748b;
-            margin-top: 4px;
-            padding-top: 4px;
-            border-top: 1px dashed #e2e8f0;
+            margin-top: 6px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.65);
+            border: 1px solid rgba(99,102,241,0.14);
+            backdrop-filter: blur(4px);
         }
         .toast-ai-badge {
             display: inline-flex;
             align-items: center;
             gap: 3px;
             font-size: 8px;
-            font-weight: 700;
+            font-weight: 800;
             color: #6366f1;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
             margin-bottom: 2px;
         }
+        .toast-ai-text {
+            display: block;
+            font-size: 10px;
+            color: #3730a3;
+            line-height: 1.35;
+            font-weight: 500;
+        }
+        .toast-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 7px;
+            gap: 6px;
+        }
+        .toast-quick-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            letter-spacing: 0.02em;
+            transition: all 0.15s ease;
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .toast-quick-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
+        .toast-item.t-critical .toast-quick-btn  { background: rgba(239,68,68,0.1);   color: #dc2626; }
+        .toast-item.t-warning  .toast-quick-btn  { background: rgba(245,158,11,0.1);  color: #d97706; }
+        .toast-item.t-security .toast-quick-btn  { background: rgba(139,92,246,0.1);  color: #7c3aed; }
+        .toast-item.t-success  .toast-quick-btn  { background: rgba(16,185,129,0.1);  color: #059669; }
+        .toast-item.t-info     .toast-quick-btn  { background: rgba(59,130,246,0.1);  color: #2563eb; }
+        .toast-item.t-behavior .toast-quick-btn  { background: rgba(249,115,22,0.1);  color: #ea580c; }
+        .toast-item.t-buffered .toast-quick-btn  { background: rgba(99,102,241,0.1);  color: #4f46e5; }
 
         /* Driver Management Styles */
         .driver-filter.active {
@@ -4422,6 +4462,7 @@
             const alertId = 'toast-' + Date.now();
             const cfg = _toastConfig(type);
 
+            const _quickFn = cfg.quickFn.replace(/ALERTID/g, alertId);
             const html = `
             <div id="${alertId}" data-title="${_esc(title)}"
                  class="toast-item ${cfg.cls}">
@@ -4429,25 +4470,24 @@
                     <div class="toast-avatar">
                         <img src="${cfg.avatar}" alt="">
                     </div>
-                    <div class="toast-bubble">
-                        <p class="toast-title">${_esc(title)}</p>
-                        <p class="toast-msg">${_esc(message)}</p>
-                        ${aiInsight ? `
-                        <div class="toast-ai-insight">
-                            <span class="toast-ai-badge">
-                                <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI Insight
-                            </span>
-                            <span class="toast-ai-text">${_esc(aiInsight)}</span>
-                        </div>` : `<div class="toast-ai-insight hidden" id="${alertId}-ai">
-                            <span class="toast-ai-badge">
-                                <span class="material-symbols-outlined text-[8px]">auto_awesome</span>AI Insight
-                            </span>
-                            <span class="toast-ai-text"></span>
-                        </div>`}
+                    <div style="flex:1;min-width:0">
+                        <div class="toast-bubble">
+                            <button onclick="removeAlert('${alertId}')" class="toast-close">
+                                <span class="material-symbols-outlined text-[12px]">close</span>
+                            </button>
+                            <p class="toast-title">${_esc(title)}</p>
+                            <p class="toast-msg">${_esc(message)}</p>
+                            ${aiInsight ? `
+                            <div class="toast-ai-insight">
+                                <span class="toast-ai-badge"><span class="material-symbols-outlined" style="font-size:9px">auto_awesome</span>AI Insight</span>
+                                <span class="toast-ai-text">${_esc(aiInsight)}</span>
+                            </div>` : `
+                            <div class="toast-ai-insight hidden" id="${alertId}-ai">
+                                <span class="toast-ai-badge"><span class="material-symbols-outlined" style="font-size:9px">auto_awesome</span>AI Insight</span>
+                                <span class="toast-ai-text"></span>
+                            </div>`}
+                        </div>
                         <div class="toast-user">${_esc(cfg.name)}</div>
-                        <button onclick="removeAlert('${alertId}')" class="toast-close">
-                            <span class="material-symbols-outlined text-[12px]">close</span>
-                        </button>
                     </div>
                 </div>
                 <div class="toast-progress" style="animation-duration:${duration}ms"></div>
@@ -4487,18 +4527,21 @@
             const activeDriver = (typeof drivers !== 'undefined')
                 ? drivers.find(d => d.id === ACTIVE_DRIVER_ID)
                 : null;
+            const _mockedAvatar = (typeof defaultMockedDrivers !== 'undefined')
+                ? defaultMockedDrivers.find(d => d.id === ACTIVE_DRIVER_ID)?.avatar : null;
             const driverAvatar = activeDriver?.avatar
+                || _mockedAvatar
                 || (activeDriver ? `https://ui-avatars.com/api/?name=${encodeURIComponent(activeDriver.name)}&background=random&color=fff&size=128` : '');
             const driverName = activeDriver?.name || 'System';
 
             const map = {
-                warning:  { cls: 't-critical', icon: 'warning',        name: driverName, avatar: driverAvatar, sound: true  },
-                critical: { cls: 't-critical', icon: 'emergency',      name: driverName, avatar: driverAvatar, sound: true  },
-                security: { cls: 't-security', icon: 'lock_open',      name: driverName, avatar: driverAvatar, sound: true  },
-                success:  { cls: 't-success',  icon: 'check_circle',   name: driverName, avatar: driverAvatar, sound: false },
-                info:     { cls: 't-info',     icon: 'info',           name: driverName, avatar: driverAvatar, sound: false },
-                behavior: { cls: 't-behavior', icon: 'directions_car', name: driverName, avatar: driverAvatar, sound: false },
-                buffered: { cls: 't-buffered', icon: 'sd_card',        name: 'SD Card',    avatar: driverAvatar, sound: true  },
+                warning:  { cls: 't-critical', icon: 'warning',        name: driverName, avatar: driverAvatar, sound: true,  quickLabel: 'View Map',     quickIcon: 'map',            quickFn: "showSection('live');removeAlert('ALERTID')"      },
+                critical: { cls: 't-critical', icon: 'emergency',      name: driverName, avatar: driverAvatar, sound: true,  quickLabel: 'View Map',     quickIcon: 'map',            quickFn: "showSection('live');removeAlert('ALERTID')"      },
+                security: { cls: 't-security', icon: 'lock_open',      name: driverName, avatar: driverAvatar, sound: true,  quickLabel: 'Track Now',    quickIcon: 'my_location',    quickFn: "showSection('live');centerOnLocation();removeAlert('ALERTID')" },
+                success:  { cls: 't-success',  icon: 'check_circle',   name: driverName, avatar: driverAvatar, sound: false, quickLabel: 'Got It',       quickIcon: 'check',          quickFn: "removeAlert('ALERTID')"                          },
+                info:     { cls: 't-info',     icon: 'info',           name: driverName, avatar: driverAvatar, sound: false, quickLabel: 'View Report',  quickIcon: 'article',        quickFn: "showSection('reports');removeAlert('ALERTID')"   },
+                behavior: { cls: 't-behavior', icon: 'directions_car', name: driverName, avatar: driverAvatar, sound: false, quickLabel: 'Analytics',    quickIcon: 'bar_chart',      quickFn: "showSection('analytics');removeAlert('ALERTID')" },
+                buffered: { cls: 't-buffered', icon: 'sd_card',        name: 'SD Card',  avatar: driverAvatar, sound: true,  quickLabel: 'View Reports', quickIcon: 'upload_file',    quickFn: "showSection('reports');removeAlert('ALERTID')"   },
             };
             return map[type] || map.info;
         }
@@ -4878,45 +4921,51 @@
                 // Check for alerts
                 // 1. Theft Alert
                 if (data.theft_detected === true) {
-                    showAlert('warning', 'Fuel Theft Alert', 'Someone may be stealing fuel — act immediately', 10000);
+                    const _tid = showAlert('warning', 'Fuel Theft Alert', 'Someone may be stealing fuel — act immediately', 10000);
                     logReport('CRITICAL', 'Fuel Theft Alert', 'Suspicious access to the fuel — possible theft in progress', data.speed);
                     pushTechAlert('CRITICAL', 'Fuel Theft Alert', 'Suspicious access to the fuel detected');
+                    if (_tid) getAiBehaviorInsight(_tid, 'Fuel Theft Alert', 'CRITICAL', 'Suspicious fuel access detected', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
                 }
-                
+
                 // 2. Security Breach Alert (mag1 or mag2 changed from 1 to 0)
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag2 !== null) {
-                    if ((prevSensorStates.mag1 === 1 && data.mag1 === 0) || 
+                    if ((prevSensorStates.mag1 === 1 && data.mag1 === 0) ||
                         (prevSensorStates.mag2 === 1 && data.mag2 === 0)) {
-                        showAlert('security', 'Storage Opened', 'A storage compartment was unexpectedly opened', 8000);
+                        const _tid = showAlert('security', 'Storage Opened', 'A storage compartment was unexpectedly opened', 8000);
                         logReport('WARNING', 'Storage Opened', 'A storage compartment was opened unexpectedly', data.speed);
                         pushTechAlert('WARNING', 'Storage Opened', 'A storage compartment was opened');
+                        if (_tid) getAiBehaviorInsight(_tid, 'Storage Opened', 'WARNING', 'Storage compartment unexpectedly opened', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
                     }
                 }
-                
+
                 // 3. Sensor Trigger Alerts - Alert when value changes from 1 to 0 (opened)
                 // Logic: 1 = Closed/Normal (Orange), 0 = Open/Alert (Red)
                 if (prevSensorStates.s1 !== null && prevSensorStates.s1 === 1 && data.s1 === 0) {
-                    showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
                     pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
+                    if (_tid) getAiBehaviorInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
                 }
-                
+
                 if (prevSensorStates.s2 !== null && prevSensorStates.s2 === 1 && data.s2 === 0) {
-                    showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
                     pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
+                    if (_tid) getAiBehaviorInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
                 }
-                
+
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag1 === 1 && data.mag1 === 0) {
-                    showAlert('security', 'Door 1 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Door 1 Opened', 'A compartment was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Door 1 Opened', 'Door 1 was opened unexpectedly', data.speed);
                     pushTechAlert('WARNING', 'Door 1 Opened', 'Door 1 was opened');
+                    if (_tid) getAiBehaviorInsight(_tid, 'Door 1 Opened', 'WARNING', 'Door 1 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
                 }
-                
+
                 if (prevSensorStates.mag2 !== null && prevSensorStates.mag2 === 1 && data.mag2 === 0) {
-                    showAlert('security', 'Door 2 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Door 2 Opened', 'A compartment was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Door 2 Opened', 'Door 2 was opened unexpectedly', data.speed);
                     pushTechAlert('WARNING', 'Door 2 Opened', 'Door 2 was opened');
+                    if (_tid) getAiBehaviorInsight(_tid, 'Door 2 Opened', 'WARNING', 'Door 2 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
                 }
                 
                 // Update previous states
