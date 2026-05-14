@@ -1546,6 +1546,7 @@
             aside.w-16 {
                 padding-left: env(safe-area-inset-left);
             }
+        }
     
         /* ── Map History Control Buttons ────────────────────────────── */
         .map-ctrl-group {
@@ -1629,6 +1630,269 @@
         }
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           MOBILE SCROLLBARS & RESPONSIVE FIXES
+           ═══════════════════════════════════════════════════════════════ */
+        
+        /* Show scrollbars on mobile for all scrollable areas */
+        @media (max-width: 768px) {
+            /* Replace hidden scrollbars with visible thin ones */
+            #dashboard-orders-list {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(156,163,175,0.7) transparent;
+                padding-bottom: 6px;
+            }
+            #dashboard-orders-list::-webkit-scrollbar {
+                display: block;
+                height: 4px;
+            }
+            #dashboard-orders-list::-webkit-scrollbar-thumb {
+                background: rgba(156,163,175,0.7);
+                border-radius: 4px;
+            }
+
+            .mobile-live-bottom {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(156,163,175,0.7) transparent;
+                padding-bottom: 6px;
+            }
+            .mobile-live-bottom::-webkit-scrollbar {
+                display: block;
+                height: 4px;
+            }
+            .mobile-live-bottom::-webkit-scrollbar-thumb {
+                background: rgba(156,163,175,0.7);
+                border-radius: 4px;
+            }
+
+            /* Ensure vertical scroll areas show scrollbar */
+            .custom-scrollbar,
+            #section-orders .orders-scroll-container,
+            #section-drivers .overflow-y-auto,
+            #section-analytics .overflow-y-auto,
+            #chat-container,
+            #event-log-list,
+            #driver-details-content,
+            #ai-side-panel-content,
+            #tech-alerts-list,
+            #buffered-records-list {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(156,163,175,0.6) transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar,
+            #section-orders .orders-scroll-container::-webkit-scrollbar,
+            #section-drivers .overflow-y-auto::-webkit-scrollbar,
+            #section-analytics .overflow-y-auto::-webkit-scrollbar,
+            #chat-container::-webkit-scrollbar,
+            #event-log-list::-webkit-scrollbar,
+            #driver-details-content::-webkit-scrollbar,
+            #ai-side-panel-content::-webkit-scrollbar,
+            #tech-alerts-list::-webkit-scrollbar,
+            #buffered-records-list::-webkit-scrollbar {
+                width: 4px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb,
+            #section-orders .orders-scroll-container::-webkit-scrollbar-thumb,
+            #section-drivers .overflow-y-auto::-webkit-scrollbar-thumb,
+            #section-analytics .overflow-y-auto::-webkit-scrollbar-thumb,
+            #chat-container::-webkit-scrollbar-thumb,
+            #event-log-list::-webkit-scrollbar-thumb,
+            #driver-details-content::-webkit-scrollbar-thumb,
+            #ai-side-panel-content::-webkit-scrollbar-thumb,
+            #tech-alerts-list::-webkit-scrollbar-thumb,
+            #buffered-records-list::-webkit-scrollbar-thumb {
+                background: rgba(156,163,175,0.6);
+                border-radius: 4px;
+            }
+
+            /* Reports table horizontal scroll with visible scrollbar */
+            #section-reports .flex-1.overflow-auto {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(156,163,175,0.7) transparent;
+            }
+            #section-reports .flex-1.overflow-auto::-webkit-scrollbar {
+                display: block;
+                height: 4px;
+            }
+            #section-reports .flex-1.overflow-auto::-webkit-scrollbar-thumb {
+                background: rgba(156,163,175,0.7);
+                border-radius: 4px;
+            }
+
+            /* Header grows when content wraps on mobile */
+            header {
+                height: auto !important;
+                min-height: 4rem;
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+            header .flex.items-center.gap-3 {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 6px;
+            }
+
+            /* Modals: stack grids on mobile */
+            #order-modal .grid-cols-2,
+            #driver-modal .grid-cols-2 {
+                grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+            }
+            #driver-modal .flex.gap-4.mb-4 {
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+            #driver-modal .flex.gap-4.mb-4 > div.shrink-0 {
+                margin-bottom: 0.5rem;
+            }
+
+            /* Order details modal needs scrollable card */
+            #order-details-modal .card {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            #order-details-content {
+                overflow-wrap: break-word;
+                word-break: break-word;
+            }
+
+            /* Event log filter row wraps on mobile */
+            #event-log-modal .flex.items-center.gap-2.px-5 {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            #event-log-modal .flex.items-center.gap-2.px-5 > span.ml-auto {
+                margin-left: 0 !important;
+                width: 100%;
+                text-align: right;
+                margin-top: 4px;
+            }
+
+            /* Reports header wraps on mobile */
+            #section-reports > div:first-child > .flex.justify-between.items-center.p-4 {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            #section-reports > div:first-child > .flex.justify-between.items-center.p-4 > div:last-child {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+
+            /* Prevent text overflow in modal inputs */
+            .card input,
+            .card select,
+            .card textarea {
+                max-width: 100%;
+            }
+
+            /* Chat bubbles don't overflow screen */
+            .chat-bubble-user,
+            .chat-bubble-ai {
+                max-width: 92% !important;
+                word-break: break-word;
+            }
+
+            /* Analytics KPI cards ensure text doesn't overflow */
+            .kpi-card .font-mono {
+                font-size: 1.25rem;
+            }
+
+            /* Map buttons on mobile: slightly larger touch targets */
+            .map-button {
+                width: 2.25rem;
+                height: 2.25rem;
+            }
+
+            /* Toast container respects mobile width */
+            #alert-container {
+                max-width: 92vw !important;
+                width: 92vw !important;
+                left: 4vw !important;
+                transform: none !important;
+            }
+
+            /* General overflow safety for cards and panels */
+            .card, .glass-panel {
+                overflow-wrap: break-word;
+                word-break: break-word;
+            }
+
+            /* Driver cards email truncation fix */
+            .driver-email-truncate {
+                max-width: 120px !important;
+            }
+
+            /* Buffered records grid on mobile */
+            #buffered-records-list {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Mobile bottom nav active state background fix */
+            nav.fixed.bottom-0 .nav-item.active {
+                background: rgba(79, 70, 229, 0.08) !important;
+            }
+        }
+
+        /* Very small phones (≤480px) extra guards */
+        @media (max-width: 480px) {
+            /* Ensure all modals have breathing room */
+            #pdf-modal .card,
+            #order-modal .card,
+            #driver-modal .card,
+            #order-details-modal .card,
+            #event-log-modal > div > .card {
+                padding: 1rem !important;
+            }
+            
+            /* Map confirm modal full width on tiny screens */
+            .map-confirm-card {
+                width: 92vw;
+                max-width: 92vw;
+            }
+
+            /* Analytics chart minimum height reduced */
+            #section-analytics .grid-cols-12 > div:first-child {
+                min-height: 200px;
+            }
+
+            /* Reports AI panel takes natural height when stacked */
+            #section-reports > div:last-child {
+                min-height: 240px;
+            }
+
+            /* Live bottom panel items don't squish */
+            .mobile-live-bottom > div:first-child {
+                min-width: 500px;
+            }
+
+            /* Orders create button shrinks */
+            #section-orders button[onclick="openCreateOrderModal()"] {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Safe area padding for mobile bottom nav */
+            @supports (padding: max(0px)) {
+                nav.fixed.bottom-0.md\\:hidden {
+                    padding-bottom: max(8px, env(safe-area-inset-bottom));
+                }
+            }
+        }
+
+        /* Extra small (≤360px) */
+        @media (max-width: 360px) {
+            .mobile-live-bottom > div:first-child {
+                min-width: 420px;
+            }
+            #dashboard-orders-list > * {
+                min-width: 220px;
+                max-width: 220px;
+            }
+            /* Hide reconnect text label completely on very small screens */
+            header button[title="Reconnect MQTT"] span.hidden.sm\\:inline {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -2699,7 +2963,7 @@
 
     <!-- Order Details Modal -->
     <div id="order-details-modal" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
-        <div class="card w-full max-w-lg p-6 fade-in">
+        <div class="card w-full max-w-lg p-6 fade-in max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-gray-800">Order Details</h3>
                 <button onclick="closeOrderDetailsModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600">
@@ -4924,7 +5188,7 @@
                     const _tid = showAlert('warning', 'Fuel Theft Alert', 'Someone may be stealing fuel — act immediately', 10000);
                     logReport('CRITICAL', 'Fuel Theft Alert', 'Suspicious access to the fuel — possible theft in progress', data.speed);
                     pushTechAlert('CRITICAL', 'Fuel Theft Alert', 'Suspicious access to the fuel detected');
-                    if (_tid) getAiBehaviorInsight(_tid, 'Fuel Theft Alert', 'CRITICAL', 'Suspicious fuel access detected', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
+                    if (_tid) getAiAlertInsight(_tid, 'Fuel Theft Alert', 'CRITICAL', 'Suspicious fuel access detected', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 // 2. Security Breach Alert (mag1 or mag2 changed from 1 to 0)
@@ -4934,7 +5198,7 @@
                         const _tid = showAlert('security', 'Storage Opened', 'A storage compartment was unexpectedly opened', 8000);
                         logReport('WARNING', 'Storage Opened', 'A storage compartment was opened unexpectedly', data.speed);
                         pushTechAlert('WARNING', 'Storage Opened', 'A storage compartment was opened');
-                        if (_tid) getAiBehaviorInsight(_tid, 'Storage Opened', 'WARNING', 'Storage compartment unexpectedly opened', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
+                        if (_tid) getAiAlertInsight(_tid, 'Storage Opened', 'WARNING', 'Storage compartment unexpectedly opened', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                     }
                 }
 
@@ -4944,28 +5208,28 @@
                     const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
                     pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
-                    if (_tid) getAiBehaviorInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
+                    if (_tid) getAiAlertInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 if (prevSensorStates.s2 !== null && prevSensorStates.s2 === 1 && data.s2 === 0) {
                     const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
                     pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
-                    if (_tid) getAiBehaviorInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
+                    if (_tid) getAiAlertInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag1 === 1 && data.mag1 === 0) {
                     const _tid = showAlert('security', 'Door 1 Opened', 'A compartment was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Door 1 Opened', 'Door 1 was opened unexpectedly', data.speed);
                     pushTechAlert('WARNING', 'Door 1 Opened', 'Door 1 was opened');
-                    if (_tid) getAiBehaviorInsight(_tid, 'Door 1 Opened', 'WARNING', 'Door 1 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
+                    if (_tid) getAiAlertInsight(_tid, 'Door 1 Opened', 'WARNING', 'Door 1 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 if (prevSensorStates.mag2 !== null && prevSensorStates.mag2 === 1 && data.mag2 === 0) {
                     const _tid = showAlert('security', 'Door 2 Opened', 'A compartment was opened — check the vehicle', 6000);
                     logReport('WARNING', 'Door 2 Opened', 'Door 2 was opened unexpectedly', data.speed);
                     pushTechAlert('WARNING', 'Door 2 Opened', 'Door 2 was opened');
-                    if (_tid) getAiBehaviorInsight(_tid, 'Door 2 Opened', 'WARNING', 'Door 2 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver');
+                    if (_tid) getAiAlertInsight(_tid, 'Door 2 Opened', 'WARNING', 'Door 2 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
                 
                 // Update previous states
@@ -6077,14 +6341,23 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
                 recentBehaviorEvents: (beh.recentEvents || []).slice(0, 5)
             } : null;
 
+            // ── Recent system / sensor alerts (NOT behavior alerts) ───────────────
+            const recentSystemAlerts = _techAlerts.slice(0, 8).map(a => ({
+                time: a.time,
+                severity: a.severity,
+                event: a.title,
+                detail: a.detail
+            }));
+
             return {
                 currentLocation: { lat: currentLat, lng: currentLng, speed: parseFloat(elSpeed ? elSpeed.innerText : 0) || 0 },
                 sensorStates: sensors,
                 analytics: { dist: totalDistance, maxSpeed: maxSpeed, duration: kpiTime ? kpiTime.innerText : '' },
-                eventCounts: eventCounts,
+                sensorEventCounts: eventCounts,
                 systemStatus: watchdogTriggered ? "DISCONNECTED" : "ONLINE",
                 lastUpdate: new Date(lastDataTime).toLocaleTimeString(),
-                logs: history,
+                sensorLogs: history,
+                recentSystemAlerts: recentSystemAlerts,
                 driverBehavior: driverBehaviorContext
             };
         }
@@ -6195,16 +6468,23 @@ Location      : lat ${liveContext.currentLocation?.lat?.toFixed(5) ?? 'N/A'}, ln
 Speed         : ${liveContext.currentLocation?.speed ?? 0} km/h
 Distance today: ${liveContext.analytics?.dist ?? 0} km
 Max speed     : ${liveContext.analytics?.maxSpeed ?? 0} km/h
-Events today  : ${liveContext.eventCounts?.info ?? 0} info, ${liveContext.eventCounts?.warning ?? 0} warnings, ${liveContext.eventCounts?.critical ?? 0} critical
+Sensor events today : ${liveContext.sensorEventCounts?.info ?? 0} info, ${liveContext.sensorEventCounts?.warning ?? 0} warnings, ${liveContext.sensorEventCounts?.critical ?? 0} critical
 Sensors       : ${JSON.stringify(liveContext.sensorStates ?? {})}
+${liveContext.recentSystemAlerts?.length ? `Recent system alerts: ${liveContext.recentSystemAlerts.map(a => `[${a.severity}] ${a.event}`).join('; ')}` : 'No recent system alerts'}
 ${liveContext.driverBehavior ? `Active driver : ${liveContext.driverBehavior.activeDriverName} (score ${liveContext.driverBehavior.safetyScore})
-Live metrics  : speed ${liveContext.driverBehavior.liveMetrics?.speed} km/h, RPM ${liveContext.driverBehavior.liveMetrics?.rpm}, throttle ${liveContext.driverBehavior.liveMetrics?.throttle}%` : 'Active driver : none'}
+Live metrics  : speed ${liveContext.driverBehavior.liveMetrics?.speed} km/h, RPM ${liveContext.driverBehavior.liveMetrics?.rpm}, throttle ${liveContext.driverBehavior.liveMetrics?.throttle}%
+Recent behavior events: ${liveContext.driverBehavior.recentBehaviorEvents?.map(e => e.name).join(', ') || 'none'}` : 'Active driver : none'}
 
 RULES:
 - Answer directly using the data above — be specific with numbers
+- Distinguish between SENSOR/VEHICLE alerts and DRIVER BEHAVIOR issues — never mix them up
+- When asked for next actions or recommendations, give 1-3 concrete, prioritized steps
+- For security alerts (fuel theft, door open), recommend immediate physical checks
+- For behavior alerts (harsh braking, speeding), recommend coaching or policy review
+- For system alerts (disconnect, no data), recommend connectivity checks
 - No introductions or "As an AI..."
 - Plain text only, no markdown, no emojis
-- 1-3 sentences max`;
+- 1-3 sentences for simple answers; up to 5 sentences for recommendations`;
 
             const raw = await callGemini(userMessage.trim(), systemPrompt);
             return sanitizeAiText(raw);
@@ -6221,21 +6501,51 @@ RULES:
          * @param {Object} metrics      - { speed, rpm, throttle, coolantTemp, engineLoad }
          * @param {string} driverName
          */
-        async function getAiBehaviorInsight(toastId, eventName, eventType, details, metrics, driverName) {
+        /**
+         * Get a smart, categorized AI insight for any alert (behavior, security, system, vehicle).
+         * Replaces the old getAiBehaviorInsight which wrongly called everything "driver behavior".
+         */
+        async function getAiAlertInsight(toastId, eventName, eventType, details, metrics, driverName, category = 'behavior') {
             if (!UNLOCKED_SETTINGS?.geminiEnabled || !UNLOCKED_SETTINGS?.geminiKey) return;
             try {
+                const catPrompts = {
+                    behavior: {
+                        context: `A DRIVER BEHAVIOR event occurred.`,
+                        role: 'fleet safety coach',
+                        focus: 'driving habits, coaching, immediate corrective action for the driver'
+                    },
+                    security: {
+                        context: `A VEHICLE SECURITY event occurred.`,
+                        role: 'security advisor',
+                        focus: 'physical security, theft prevention, immediate checks on the vehicle'
+                    },
+                    system: {
+                        context: `A SYSTEM / CONNECTIVITY event occurred.`,
+                        role: 'fleet operations advisor',
+                        focus: 'connectivity, diagnostics, operational continuity'
+                    },
+                    vehicle: {
+                        context: `A VEHICLE STATUS event occurred.`,
+                        role: 'fleet maintenance advisor',
+                        focus: 'vehicle health, maintenance, operational status'
+                    }
+                };
+
+                const cfg = catPrompts[category] || catPrompts.behavior;
+
                 const prompt =
-                    `A driver behavior event occurred. Give ONE short sentence of actionable advice for the fleet manager. ` +
-                    `Be direct, no filler words.\n` +
-                    `Driver: ${driverName}\n` +
+                    `${cfg.context}\n` +
                     `Event: ${eventName} [${eventType}]\n` +
+                    `Driver: ${driverName}\n` +
                     `Details: ${details}\n` +
                     `Metrics: speed=${metrics.speed}km/h, RPM=${metrics.rpm}, throttle=${metrics.throttle}%, ` +
-                    `coolant=${metrics.coolantTemp}°C, load=${metrics.engineLoad}%`;
+                    `coolant=${metrics.coolantTemp}°C, load=${metrics.engineLoad}%\n\n` +
+                    `As a ${cfg.role}, give the fleet manager 1-2 specific, actionable sentences about what to do next. ` +
+                    `Focus on: ${cfg.focus}. Be direct and specific.`;
 
                 const systemPrompt =
-                    `You are a vehicle safety AI. Respond with exactly one short sentence (max 12 words). ` +
-                    `Plain text only. No markdown, no punctuation at the end.`;
+                    `You are an expert ${cfg.role}. Respond with 1-2 short, highly specific sentences. ` +
+                    `Give exactly one concrete next action. Plain text only. No markdown, no bullet points.`;
 
                 const raw = await callGemini(prompt, systemPrompt);
                 const insight = sanitizeAiText(raw).split('\n')[0].trim();
@@ -6243,6 +6553,11 @@ RULES:
             } catch (e) {
                 // Silently fail — toast is already shown without insight
             }
+        }
+
+        // Backwards-compatible alias — routes to the new categorized function
+        async function getAiBehaviorInsight(toastId, eventName, eventType, details, metrics, driverName) {
+            return getAiAlertInsight(toastId, eventName, eventType, details, metrics, driverName, 'behavior');
         }
 
         function exportCSV() {

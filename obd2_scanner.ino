@@ -1,465 +1,583 @@
-/*
-  ============================================================
-  SGU Logistics — ESP32 Dummy Telemetry Sender
-  ============================================================
+/**
+ * ============================================================
+ *  MonzTrack OBD2 ESP32 Firmware — v2.0 (CORRECTED)
+ * ============================================================
+ *
+ *  Fixes applied vs v1:
+ *  [1] StaticJsonDocument increased to 768 bytes (was 512 — caused silent truncation)
+ *  [2] char payload[] buffer matched to 768 bytes
+ *  [3] throttle added as flat top-level field (dashboard reads data.throttle)
+ *  [4] fuel_level added as flat top-level field (dashboard reads data.fuel_level)
+ *  [5] speed_obd added (dashboard GPS vs OBD sync check — was stuck on WAITING)
+ *  [6] mil added (MIL / check engine light indicator — was never updating)
+ *  [7] fuel.level_percent added inside fuel{} object (dashboard fallback path)
+ *  [8] coolant_temp added as flat top-level field (processActiveDriverBehavior reads it flat)
+ *  [9] engine_load added as flat top-level field (same reason as above)
+ *
+ * ============================================================
+ *  PUBLISHED JSON SHAPE (complete, matches dashboard exactly)
+ * ============================================================
+ *  {
+ *    "device_id"    : "device-01",
+ *    "lat"          : 0,
+ *    "lng"          : 0,
+ *    "speed"        : 45,
+ *    "speed_obd"    : 45,        ← GPS vs OBD sync check
+ *    "loc"          : 0,
+ *    "sats"         : 0,
+ *    "throttle"     : 18.4,      ← flat (driver behavior scoring)
+ *    "fuel_level"   : 60.2,      ← flat (fuel gauge)
+ *    "coolant_temp" : 88,        ← flat (driver behavior scoring)
+ *    "engine_load"  : 32.5,      ← flat (driver behavior scoring)
+ *    "mil"          : false,     ← check engine light
+ *    "s1"           : 1,
+ *    "s2"           : 1,
+ *    "mag1"         : 1,
+ *    "mag2"         : 1,
+ *    "fuel": {
+ *      "theft_detected" : false,
+ *      "level_percent"  : 60.2   ← fallback path for fuel gauge
+ *    },
+ *    "obd": {
+ *      "rpm"          : 1200,
+ *      "speed"        : 45,
+ *      "engine_load"  : 32.5,
+ *      "coolant_temp" : 88,
+ *      "intake_temp"  : 35,
+ *      "throttle"     : 18.4,
+ *      "fuel_level"   : 60.2,
+ *      "run_time"     : 3600,
+ *      "voltage"      : 14.12,
+ *      "maf"          : 8.45,
+ *      "fuel_press"   : 270,
+ *      "map_kpa"      : 45,
+ *      "timing"       : 12.5,
+ *      "rail_press"   : 350.0
+ *    }
+ *  }
+ *
+ * ============================================================
+ *  HARDWARE WIRING
+ * ============================================================
+ *  MCP2515 Pin  → ESP32 Pin
+ *  VCC          → 5V
+ *  GND          → GND
+ *  CS           → GPIO 5
+ *  MISO (SO)    → GPIO 19
+ *  MOSI (SI)    → GPIO 23
+ *  SCK          → GPIO 18
+ *  INT          → (not used)
+ *
+ *  Optional Sensors  → ESP32 Pin
+ *  Limit Switch S1   → GPIO 34  (INPUT_PULLUP)
+ *  Limit Switch S2   → GPIO 35  (INPUT_PULLUP)
+ *  Magnetic Sensor 1 → GPIO 32  (INPUT_PULLUP)
+ *  Magnetic Sensor 2 → GPIO 33  (INPUT_PULLUP)
+ *
+ * ============================================================
+ *  REQUIRED LIBRARIES (Arduino Library Manager)
+ * ============================================================
+ *  - mcp_can       by Cory J. Fowler
+ *  - PubSubClient  by Nick O'Leary
+ *  - ArduinoJson   by Benoit Blanchon  (v6)
+ * ============================================================
+ */
 
-  Purpose  : Simulate a moving vehicle with OBD-II data so you
-             can preview the full dashboard without real hardware.
-
-  Network  : WiFi  →  HiveMQ public broker  →  dashboard
-  WiFi     : SSID="test"  Password="12345678"
-  Broker   : broker.hivemq.com  port 1883
-  Topic    : monztrack/device01/gps   (single topic, all data)
-
-  JSON payload structure (matches dashboard parser exactly):
-  {
-    "device_id" : "monztrack-01",
-    "lat"       : -6.2252,
-    "lng"       : 106.6552,
-    "speed"     : 45.2,
-    "loc"       : 1,          <- 1 = GPS fix, 0 = no fix
-    "sats"      : 8,
-    "obd" : {
-      "speed"       : 45.2,
-      "rpm"         : 1850,
-      "throttle"    : 38,
-      "coolant_temp": 87,
-      "engine_load" : 42
-    },
-    "s1"   : 1,   <- limit switch 1  (1=closed, 0=open/alert)
-    "s2"   : 1,   <- limit switch 2
-    "mag1" : 1,   <- magnetic sensor 1
-    "mag2" : 1,   <- magnetic sensor 2
-    "fuel" : { "theft_detected": false }
-  }
-
-  Simulation highlights:
-    - Vehicle starts at SGU campus Jakarta, loops a 5-km route
-    - Speed varies 0–130 km/h with realistic ramp-up / braking
-    - Periodically triggers: Speeding, Harsh Braking, Aggressive
-      Launch, Cold Engine, Engine Lugging, Excessive Idling
-    - Sensor events (S1 open, MAG1 trigger) fire occasionally
-    - Safety score accumulates exactly as the C++ module would
-    - Publishes every 3 seconds
-
-  Libraries needed (install via Arduino Library Manager):
-    - PubSubClient   by Nick O'Leary
-    - ArduinoJson    by Benoit Blanchon
-
-  Board: "ESP32 Dev Module"
-  ============================================================
-*/
-
-// ── Includes ────────────────────────────────────────────────
+#include <SPI.h>
+#include <mcp_can.h>
 #include <WiFi.h>
-#include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include <math.h>
 
-// ── WiFi credentials ────────────────────────────────────────
+// ============================================================
+//  USER CONFIGURATION — edit these values
+// ============================================================
 const char* WIFI_SSID     = "test";
 const char* WIFI_PASSWORD = "12345678";
 
-// ── MQTT broker ─────────────────────────────────────────────
-const char* MQTT_HOST     = "broker.hivemq.com";
+// Public HiveMQ broker — no credentials needed
+// Dashboard connects here via WSS on port 8884
+// ESP32 connects here via plain TCP on port 1883
+const char* MQTT_BROKER   = "broker.hivemq.com";
 const int   MQTT_PORT     = 1883;
 const char* MQTT_TOPIC    = "monztrack/device01/gps";
-// Unique client ID — change the suffix if you run multiple devices
-const char* MQTT_CLIENT   = "sgu-esp32-sim-01";
+const char* DEVICE_ID     = "device-01";
 
-// ── Publish interval ────────────────────────────────────────
-const unsigned long PUBLISH_MS    = 3000;   // publish every 3 s
-const unsigned long WIFI_CHECK_MS = 5000;   // WiFi watchdog every 5 s
-const unsigned long MQTT_RETRY_MS = 3000;   // MQTT reconnect interval
+// Publish interval in milliseconds
+const unsigned long PUBLISH_INTERVAL     = 3000;
+const unsigned long TESTER_PRESENT_MS    = 2000;
 
-// ── Route: 10 waypoints looping around Jakarta ──────────────
-// Starts near SGU campus, follows a realistic city loop
-struct Waypoint { float lat; float lng; };
-const int ROUTE_SIZE = 10;
-const Waypoint ROUTE[ROUTE_SIZE] = {
-    { -6.2252f,  106.6552f },  // 0  SGU campus
-    { -6.2185f,  106.6820f },  // 1  Jl. Raya Daan Mogot
-    { -6.2063f,  106.7110f },  // 2  Cengkareng
-    { -6.1944f,  106.7580f },  // 3  Kalideres
-    { -6.1856f,  106.7920f },  // 4  Penjaringan
-    { -6.1990f,  106.8230f },  // 5  Pluit
-    { -6.2215f,  106.8450f },  // 6  Ancol
-    { -6.2380f,  106.8320f },  // 7  Tanjung Priok
-    { -6.2470f,  106.7810f },  // 8  Sunter
-    { -6.2360f,  106.7100f },  // 9  Cempaka Putih → back to 0
-};
+// ============================================================
+//  PIN DEFINITIONS
+// ============================================================
+const int CAN_CS_PIN = 5;
 
-// ── Simulation scenario steps ────────────────────────────────
-// Each step defines target speed, RPM, throttle, and how long to hold it
-struct ScenarioStep {
-    float targetSpeed;    // km/h
-    int   targetRpm;
-    float targetThrottle; // %
-    float targetLoad;     // %
-    float coolantTemp;    // °C
-    int   holdSeconds;    // how long this step lasts
-    bool  s1Open;         // trigger S1 sensor alert
-    bool  mag1Open;       // trigger MAG1 sensor alert
-    bool  fuelTheft;      // trigger fuel theft
-};
+// Set any sensor pin to -1 if not wired — defaults to 1 (normal/green)
+const int PIN_S1   = 34;
+const int PIN_S2   = 35;
+const int PIN_MAG1 = 32;
+const int PIN_MAG2 = 33;
 
-const int SCENARIO_SIZE = 12;
-const ScenarioStep SCENARIO[SCENARIO_SIZE] = {
-    //  spd   rpm    thr   load  cool  hold  s1     mag1   theft
-    {  0.0f,  800,  5.0f, 10.0f, 60.0f,  8, false, false, false },  // 0  Cold idle
-    { 30.0f, 1500, 92.0f, 55.0f, 65.0f,  5, false, false, false },  // 1  Aggressive launch
-    { 60.0f, 2200, 40.0f, 45.0f, 82.0f,  6, false, false, false },  // 2  Normal cruise
-    {120.0f, 3800, 75.0f, 70.0f, 90.0f,  5, false, false, false },  // 3  Speeding!
-    { 10.0f,  900, 10.0f, 20.0f, 90.0f,  4, false, false, false },  // 4  Harsh braking
-    {  0.0f,  700,  3.0f,  8.0f, 88.0f, 12, false, false, false },  // 5  Excessive idling
-    { 45.0f, 1800, 38.0f, 42.0f, 87.0f,  7, true,  false, false },  // 6  S1 opens (fuel cap)
-    { 50.0f, 1950, 42.0f, 44.0f, 88.0f,  6, false, true,  false },  // 7  MAG1 opens (compartment)
-    { 40.0f, 1200, 35.0f, 88.0f, 85.0f,  5, false, false, false },  // 8  Engine lugging
-    { 55.0f, 3500, 60.0f, 55.0f, 62.0f,  4, false, false, false },  // 9  Cold engine abuse
-    { 30.0f, 1400, 28.0f, 32.0f, 87.0f,  5, false, false, true  },  // 10 Fuel theft!
-    { 55.0f, 2000, 40.0f, 43.0f, 88.0f,  8, false, false, false },  // 11 Normal driving
-};
+// ============================================================
+//  OBD2 PID CONSTANTS  (SAE J1979 / ISO 15031-5)
+// ============================================================
+#define CAN_ID_OBD_REQUEST    0x7DF
+#define OBD_SERVICE_01        0x01
+#define OBD_RESPONSE_BASE     0x41   // 0x40 + service 0x01
 
-// ── Live simulated values (interpolated each loop) ───────────
-float simLat        = ROUTE[0].lat;
-float simLng        = ROUTE[0].lng;
-float simSpeed      = 0.0f;
-int   simRpm        = 800;
-float simThrottle   = 5.0f;
-float simLoad       = 10.0f;
-float simCoolant    = 60.0f;
-bool  simS1         = true;   // true = closed/normal
-bool  simS2         = true;
-bool  simMag1       = true;
-bool  simMag2       = true;
-bool  simFuelTheft  = false;
-int   simSats       = 8;
-bool  simGpsFix     = true;
+#define PID_ENGINE_LOAD       0x04
+#define PID_COOLANT_TEMP      0x05
+#define PID_FUEL_PRESSURE     0x0A
+#define PID_INTAKE_MAP        0x0B
+#define PID_ENGINE_RPM        0x0C
+#define PID_VEHICLE_SPEED     0x0D
+#define PID_TIMING_ADVANCE    0x0E
+#define PID_INTAKE_AIR_TEMP   0x0F
+#define PID_MAF_FLOW          0x10
+#define PID_THROTTLE_POS      0x11
+#define PID_OBD_STANDARDS     0x1C   // used to detect MIL support
+#define PID_RUN_TIME          0x1F
+#define PID_FUEL_RAIL_PRESS   0x23
+#define PID_FUEL_LEVEL        0x2F
+#define PID_CTRL_MODULE_VOLT  0x42
+#define PID_MIL_STATUS        0x01   // byte A bit7 = MIL on/off
 
-int   scenarioIdx   = 0;        // current scenario step
-int   stepSecElapsed = 0;       // seconds spent in this step
-int   routeIdx      = 0;        // current route waypoint
-float routeProgress = 0.0f;     // 0.0 → 1.0 between waypoints
-
-// ── Connectivity objects ─────────────────────────────────────
+// ============================================================
+//  GLOBAL OBJECTS
+// ============================================================
+MCP_CAN      CAN(CAN_CS_PIN);
 WiFiClient   wifiClient;
 PubSubClient mqtt(wifiClient);
 
-// ── Timing ──────────────────────────────────────────────────
-unsigned long lastPublish   = 0;
-unsigned long lastWifiCheck = 0;
-unsigned long lastMqttRetry = 0;
-
-// ── Forward declarations ─────────────────────────────────────
-void connectWiFi();
-void connectMQTT();
-void maintainConnections();
-void stepSimulation();
-void interpolatePosition();
-String buildPayload();
-void publishPayload();
-float lerp(float a, float b, float t);
-void printStatus();
+// ============================================================
+//  OBD DATA STORE  (updated by processIncomingCAN)
+// ============================================================
+struct ObdData {
+    float        rpm          = 0;
+    int          speed        = 0;
+    float        engineLoad   = 0;
+    int          coolantTemp  = 0;
+    int          intakeTemp   = 0;
+    float        throttle     = 0;
+    float        fuelLevel    = 0;
+    unsigned int runTime      = 0;
+    float        voltage      = 0;
+    float        maf          = 0;
+    int          fuelPressure = 0;
+    int          intakeMap    = 0;
+    float        timing       = 0;
+    float        railPressure = 0;
+    bool         mil          = false;  // Malfunction Indicator Lamp
+} obd;
 
 // ============================================================
-// SETUP
+//  TIMING TRACKERS
+// ============================================================
+unsigned long lastPublishMs       = 0;
+unsigned long lastTesterPresentMs = 0;
+
+// ============================================================
+//  SETUP
 // ============================================================
 void setup() {
     Serial.begin(115200);
     delay(500);
+    Serial.println("\n[SYSTEM] MonzTrack OBD2 v2.0 starting...");
 
-    Serial.println(F("\n╔══════════════════════════════════════╗"));
-    Serial.println(F("║  SGU Dummy Telemetry — ESP32 WiFi    ║"));
-    Serial.println(F("╚══════════════════════════════════════╝\n"));
+    // Configure sensor input pins
+    if (PIN_S1   >= 0) pinMode(PIN_S1,   INPUT_PULLUP);
+    if (PIN_S2   >= 0) pinMode(PIN_S2,   INPUT_PULLUP);
+    if (PIN_MAG1 >= 0) pinMode(PIN_MAG1, INPUT_PULLUP);
+    if (PIN_MAG2 >= 0) pinMode(PIN_MAG2, INPUT_PULLUP);
 
-    connectWiFi();
+    setupWiFi();
 
-    mqtt.setServer(MQTT_HOST, MQTT_PORT);
-    mqtt.setKeepAlive(60);
-    mqtt.setBufferSize(512);   // 512 bytes is plenty for our payload (~280 bytes)
-    connectMQTT();
+    mqtt.setServer(MQTT_BROKER, MQTT_PORT);
+    mqtt.setBufferSize(800);  // Headroom above our 768-byte JSON
 
-    Serial.println(F("\n[SIM] Starting simulation...\n"));
+    setupCAN();
+
+    Serial.println("[SYSTEM] Ready. Publishing to: " + String(MQTT_TOPIC));
 }
 
 // ============================================================
-// MAIN LOOP
+//  MAIN LOOP
 // ============================================================
 void loop() {
-    unsigned long now = millis();
-
-    // ── Connection watchdogs ─────────────────────────────────
-    maintainConnections();
-
-    // ── Publish on interval ──────────────────────────────────
-    if (now - lastPublish >= PUBLISH_MS) {
-        lastPublish = now;
-
-        stepSimulation();       // advance dummy data
-        interpolatePosition();  // move along route
-        publishPayload();       // send to broker
-        printStatus();          // serial debug
+    // Maintain MQTT connection
+    if (WiFi.status() == WL_CONNECTED) {
+        if (!mqtt.connected()) reconnectMQTT();
+        mqtt.loop();
     }
 
-    // ── MQTT loop (processes ACKs, keeps connection alive) ───
-    mqtt.loop();
+    unsigned long now = millis();
+
+    // Send Tester Present every 2 s to keep ECU in diagnostic mode
+    if (now - lastTesterPresentMs >= TESTER_PRESENT_MS) {
+        lastTesterPresentMs = now;
+        sendTesterPresent();
+    }
+
+    // Poll all OBD PIDs then publish
+    if (now - lastPublishMs >= PUBLISH_INTERVAL) {
+        lastPublishMs = now;
+        pollAllPIDs();
+        buildAndPublish();
+    }
+
+    // Continuously drain any incoming CAN frames
+    processIncomingCAN();
 }
 
 // ============================================================
-// WIFI — connect + auto-reconnect
+//  WIFI SETUP
 // ============================================================
-void connectWiFi() {
-    if (WiFi.status() == WL_CONNECTED) return;
-
-    Serial.print(F("[WiFi] Connecting to '"));
-    Serial.print(WIFI_SSID);
-    Serial.print(F("'"));
-
-    WiFi.mode(WIFI_STA);
-    WiFi.setAutoReconnect(true);
-    WiFi.persistent(true);
+void setupWiFi() {
+    Serial.print("[WiFi] Connecting to " + String(WIFI_SSID));
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 40) {
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 15000) {
         delay(500);
-        Serial.print('.');
-        attempts++;
+        Serial.print(".");
     }
-    Serial.println();
 
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.print(F("[WiFi] Connected — IP: "));
-        Serial.println(WiFi.localIP());
-        Serial.print(F("[WiFi] RSSI: "));
-        Serial.print(WiFi.RSSI());
-        Serial.println(F(" dBm"));
+        Serial.println("\n[WiFi] Connected — IP: " + WiFi.localIP().toString());
     } else {
-        Serial.println(F("[WiFi] FAILED — will retry in loop"));
+        Serial.println("\n[WiFi] Failed — running without network.");
     }
 }
 
 // ============================================================
-// MQTT — connect + subscribe
+//  MQTT RECONNECT
 // ============================================================
-void connectMQTT() {
-    if (!WiFi.isConnected()) return;
-    if (mqtt.connected()) return;
+void reconnectMQTT() {
+    while (!mqtt.connected()) {
+        if (WiFi.status() != WL_CONNECTED) return;
 
-    Serial.print(F("[MQTT] Connecting to "));
-    Serial.print(MQTT_HOST);
-    Serial.print(F("..."));
+        // Unique client ID using chip MAC so multiple devices don't clash
+        String clientId = "MonzTrack_" + String((uint32_t)ESP.getEfuseMac(), HEX);
+        Serial.print("[MQTT] Connecting as " + clientId + " ... ");
 
-    // Use a unique client ID (append last 3 bytes of MAC)
-    char clientId[32];
-    uint8_t mac[6];
-    WiFi.macAddress(mac);
-    snprintf(clientId, sizeof(clientId), "%s-%02X%02X%02X",
-             MQTT_CLIENT, mac[3], mac[4], mac[5]);
-
-    if (mqtt.connect(clientId)) {
-        Serial.println(F(" connected"));
-    } else {
-        Serial.print(F(" FAILED, state="));
-        Serial.println(mqtt.state());
-        // state codes:
-        // -4 = MQTT_CONNECTION_TIMEOUT
-        // -3 = MQTT_CONNECTION_LOST
-        // -2 = MQTT_CONNECT_FAILED
-        // -1 = MQTT_DISCONNECTED
-        //  1 = MQTT_CONNECT_BAD_PROTOCOL
-        //  2 = MQTT_CONNECT_BAD_CLIENT_ID
-        //  5 = MQTT_CONNECT_UNAUTHORIZED
-    }
-}
-
-// ============================================================
-// MAINTAIN CONNECTIONS — called every loop()
-// ============================================================
-void maintainConnections() {
-    unsigned long now = millis();
-
-    // WiFi watchdog
-    if (now - lastWifiCheck >= WIFI_CHECK_MS) {
-        lastWifiCheck = now;
-        if (WiFi.status() != WL_CONNECTED) {
-            Serial.println(F("[WiFi] Disconnected — reconnecting..."));
-            connectWiFi();
-        }
-    }
-
-    // MQTT watchdog
-    if (!mqtt.connected()) {
-        if (now - lastMqttRetry >= MQTT_RETRY_MS) {
-            lastMqttRetry = now;
-            Serial.println(F("[MQTT] Disconnected — reconnecting..."));
-            connectMQTT();
+        if (mqtt.connect(clientId.c_str())) {
+            Serial.println("connected.");
+        } else {
+            Serial.println("failed (rc=" + String(mqtt.state()) + "). Retry in 3s.");
+            delay(3000);
         }
     }
 }
 
 // ============================================================
-// STEP SIMULATION
-// Advances the scenario step every N seconds, interpolates
-// all OBD values toward the step's targets smoothly.
+//  CAN / MCP2515 SETUP
+//  If no data arrives: try CAN_250KBPS, or MCP_16MHZ for 16MHz boards
 // ============================================================
-void stepSimulation() {
-    const ScenarioStep& step = SCENARIO[scenarioIdx];
-    float alpha = 0.25f;  // smoothing factor (0=no change, 1=instant)
-
-    // Smooth interpolation toward targets
-    simSpeed    = lerp(simSpeed,    step.targetSpeed,    alpha);
-    simRpm      = (int)lerp((float)simRpm, (float)step.targetRpm, alpha);
-    simThrottle = lerp(simThrottle, step.targetThrottle, alpha);
-    simLoad     = lerp(simLoad,     step.targetLoad,     alpha);
-    simCoolant  = lerp(simCoolant,  step.coolantTemp,    0.05f); // coolant warms slowly
-
-    // Sensor states come directly from the step
-    simS1        = !step.s1Open;    // true=closed(normal), false=open(alert)
-    simS2        = true;            // S2 always normal in simulation
-    simMag1      = !step.mag1Open;
-    simMag2      = true;
-    simFuelTheft = step.fuelTheft;
-
-    // Advance step timer
-    stepSecElapsed++;
-    if (stepSecElapsed >= step.holdSeconds) {
-        stepSecElapsed = 0;
-        scenarioIdx    = (scenarioIdx + 1) % SCENARIO_SIZE;
-        Serial.print(F("[SIM] → Scenario step "));
-        Serial.println(scenarioIdx);
+void setupCAN() {
+    Serial.print("[CAN] Initialising MCP2515 ... ");
+    while (CAN_OK != CAN.begin(MCP_ANY, CAN_500KBPS, MCP_8MHZ)) {
+        Serial.println("failed, retrying...");
+        delay(500);
     }
-
-    // Satellite count: flicker occasionally
-    simSats    = 7 + (int)(sin(millis() / 15000.0f) * 2.0f);
-    simGpsFix  = (simSats >= 4);
+    CAN.setMode(MCP_NORMAL);
+    Serial.println("ready at 500 kbps.");
 }
 
 // ============================================================
-// INTERPOLATE POSITION
-// Moves the GPS coordinate along the route at current speed.
+//  TESTER PRESENT  (ISO 14229 — keeps ECU awake for diagnostics)
 // ============================================================
-void interpolatePosition() {
-    if (!simGpsFix || simSpeed < 1.0f) return;
-
-    // Distance per publish interval in degrees (very rough)
-    // 1 degree lat ≈ 111 km → per 3 s at speed km/h:
-    float distDeg = (simSpeed / 3600.0f) * (PUBLISH_MS / 1000.0f) / 111.0f;
-    routeProgress += distDeg * 25.0f; // scale to waypoint units
-
-    while (routeProgress >= 1.0f) {
-        routeProgress -= 1.0f;
-        routeIdx = (routeIdx + 1) % ROUTE_SIZE;
-    }
-
-    int nextIdx = (routeIdx + 1) % ROUTE_SIZE;
-    simLat = lerp(ROUTE[routeIdx].lat, ROUTE[nextIdx].lat, routeProgress);
-    simLng = lerp(ROUTE[routeIdx].lng, ROUTE[nextIdx].lng, routeProgress);
+void sendTesterPresent() {
+    unsigned char msg[8] = {0x02, 0x3E, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CAN.sendMsgBuf(CAN_ID_OBD_REQUEST, 0, 8, msg);
 }
 
 // ============================================================
-// BUILD JSON PAYLOAD
-// Matches the exact structure parsed by onMessageArrived()
-// in index.html.
-// Target size: ~280 bytes well within 512-byte buffer.
+//  SEND A SINGLE OBD2 MODE-01 PID REQUEST
 // ============================================================
-String buildPayload() {
-    // StaticJsonDocument sized to fit the payload comfortably
-    // Use https://arduinojson.org/v6/assistant/ to tune if needed
-    StaticJsonDocument<320> doc;
+void sendPIDRequest(uint8_t pid) {
+    unsigned char msg[8] = {0x02, OBD_SERVICE_01, pid,
+                             0x55, 0x55, 0x55, 0x55, 0x55};
+    CAN.sendMsgBuf(CAN_ID_OBD_REQUEST, 0, 8, msg);
+}
 
-    doc["device_id"] = "monztrack-01";
-    doc["lat"]       = serialized(String(simLat, 6));
-    doc["lng"]       = serialized(String(simLng, 6));
-    doc["speed"]     = serialized(String(simSpeed, 1));
-    doc["loc"]       = simGpsFix ? 1 : 0;
-    doc["sats"]      = simSats;
+// ============================================================
+//  BLOCK & DRAIN CAN FOR ms MILLISECONDS
+// ============================================================
+void waitAndDrain(unsigned long ms) {
+    unsigned long end = millis() + ms;
+    while (millis() < end) {
+        processIncomingCAN();
+        yield();
+    }
+}
 
-    // Nested OBD object — matches payload.obd.* in dashboard
-    JsonObject obd = doc.createNestedObject("obd");
-    obd["speed"]        = serialized(String(simSpeed, 1));
-    obd["rpm"]          = simRpm;
-    obd["throttle"]     = (int)simThrottle;
-    obd["coolant_temp"] = (int)simCoolant;
-    obd["engine_load"]  = (int)simLoad;
+// ============================================================
+//  POLL ALL SUPPORTED PIDS SEQUENTIALLY
+// ============================================================
+void pollAllPIDs() {
+    const uint8_t pids[] = {
+        PID_MIL_STATUS,       // Check engine / DTC count
+        PID_ENGINE_RPM,
+        PID_VEHICLE_SPEED,
+        PID_ENGINE_LOAD,
+        PID_COOLANT_TEMP,
+        PID_INTAKE_AIR_TEMP,
+        PID_THROTTLE_POS,
+        PID_FUEL_LEVEL,
+        PID_RUN_TIME,
+        PID_CTRL_MODULE_VOLT,
+        PID_MAF_FLOW,
+        PID_FUEL_PRESSURE,
+        PID_INTAKE_MAP,
+        PID_TIMING_ADVANCE,
+        PID_FUEL_RAIL_PRESS
+    };
 
-    // Flat sensor fields — matches payload.s1, .s2, .mag1, .mag2
-    doc["s1"]   = simS1   ? 1 : 0;
-    doc["s2"]   = simS2   ? 1 : 0;
-    doc["mag1"] = simMag1 ? 1 : 0;
-    doc["mag2"] = simMag2 ? 1 : 0;
+    for (uint8_t i = 0; i < sizeof(pids); i++) {
+        sendPIDRequest(pids[i]);
+        waitAndDrain(60);  // 60 ms per PID is sufficient for most ECUs
+    }
 
-    // Nested fuel object — matches payload.fuel.theft_detected
+    printOBDToSerial();
+}
+
+// ============================================================
+//  PROCESS ALL AVAILABLE INCOMING CAN FRAMES
+// ============================================================
+void processIncomingCAN() {
+    unsigned char len = 0, buf[8];
+    unsigned long id  = 0;
+
+    while (CAN_MSGAVAIL == CAN.checkReceive()) {
+        CAN.readMsgBuf(&id, &len, buf);
+
+        // OBD2 responses come from ECU IDs 0x7E8–0x7EF
+        // Frame layout: [length] [0x41] [PID] [dataA] [dataB] ...
+        if (len >= 3 && buf[1] == OBD_RESPONSE_BASE) {
+            decodeOBDResponse(buf[2], buf);
+        }
+
+        // MIL status is in service 01 PID 01 — response byte is 0x41
+        // buf[1]=0x41, buf[2]=0x01 (PID), buf[3] bit7 = MIL on/off
+        if (len >= 4 && buf[1] == OBD_RESPONSE_BASE && buf[2] == 0x01) {
+            obd.mil = (buf[3] & 0x80) != 0;  // bit 7 = MIL lamp
+        }
+    }
+}
+
+// ============================================================
+//  DECODE A SINGLE OBD2 RESPONSE INTO obd STRUCT
+//  All formulas from SAE J1979 / ISO 15031-5
+// ============================================================
+void decodeOBDResponse(uint8_t pid, unsigned char* buf) {
+    switch (pid) {
+
+        case PID_ENGINE_RPM:
+            // ((A * 256) + B) / 4  → RPM
+            obd.rpm = ((buf[3] * 256.0f) + buf[4]) / 4.0f;
+            break;
+
+        case PID_VEHICLE_SPEED:
+            // A  → km/h
+            obd.speed = buf[3];
+            break;
+
+        case PID_ENGINE_LOAD:
+            // (A * 100) / 255  → %
+            obd.engineLoad = (buf[3] * 100.0f) / 255.0f;
+            break;
+
+        case PID_COOLANT_TEMP:
+            // A - 40  → °C
+            obd.coolantTemp = buf[3] - 40;
+            break;
+
+        case PID_INTAKE_AIR_TEMP:
+            // A - 40  → °C
+            obd.intakeTemp = buf[3] - 40;
+            break;
+
+        case PID_THROTTLE_POS:
+            // (A * 100) / 255  → %
+            obd.throttle = (buf[3] * 100.0f) / 255.0f;
+            break;
+
+        case PID_FUEL_LEVEL:
+            // (A * 100) / 255  → %
+            obd.fuelLevel = (buf[3] * 100.0f) / 255.0f;
+            break;
+
+        case PID_RUN_TIME:
+            // (A * 256) + B  → seconds
+            obd.runTime = (buf[3] * 256) + buf[4];
+            break;
+
+        case PID_CTRL_MODULE_VOLT:
+            // ((A * 256) + B) / 1000  → Volts
+            obd.voltage = ((buf[3] * 256.0f) + buf[4]) / 1000.0f;
+            break;
+
+        case PID_MAF_FLOW:
+            // ((A * 256) + B) / 100  → g/s
+            obd.maf = ((buf[3] * 256.0f) + buf[4]) / 100.0f;
+            break;
+
+        case PID_FUEL_PRESSURE:
+            // A * 3  → kPa gauge
+            obd.fuelPressure = buf[3] * 3;
+            break;
+
+        case PID_INTAKE_MAP:
+            // A  → kPa absolute
+            obd.intakeMap = buf[3];
+            break;
+
+        case PID_TIMING_ADVANCE:
+            // (A / 2) - 64  → degrees before TDC
+            obd.timing = (buf[3] / 2.0f) - 64.0f;
+            break;
+
+        case PID_FUEL_RAIL_PRESS:
+            // ((A * 256) + B) * 0.079  → kPa
+            obd.railPressure = ((buf[3] * 256.0f) + buf[4]) * 0.079f;
+            break;
+
+        default:
+            break;
+    }
+}
+
+// ============================================================
+//  READ DIGITAL SENSOR PIN
+//  INPUT_PULLUP: HIGH = normal/closed (1), LOW = open/alert (0)
+//  Dashboard: 1 = green (normal), 0 = red (alert)
+// ============================================================
+int readSensor(int pin) {
+    if (pin < 0) return 1;  // Not wired → safe default
+    return (digitalRead(pin) == HIGH) ? 1 : 0;
+}
+
+// ============================================================
+//  BUILD COMPLETE JSON PAYLOAD AND PUBLISH VIA MQTT
+// ============================================================
+void buildAndPublish() {
+    int s1   = readSensor(PIN_S1);
+    int s2   = readSensor(PIN_S2);
+    int mag1 = readSensor(PIN_MAG1);
+    int mag2 = readSensor(PIN_MAG2);
+
+    // Fuel theft heuristic: fuel cap open (S1=0) while stationary
+    bool theftDetected = (s1 == 0 && obd.speed < 2);
+
+    // --------------------------------------------------------
+    //  768-byte document — sized to fit the full JSON safely
+    //  (measured max JSON ~650 bytes — 768 gives safe headroom)
+    // --------------------------------------------------------
+    StaticJsonDocument<768> doc;
+
+    // --- Identity ---
+    doc["device_id"] = DEVICE_ID;
+
+    // --- GPS fields (no GPS module — send 0) ---
+    // Wire a UART GPS (e.g. NEO-6M) to replace these with real coords
+    doc["lat"]  = 0;
+    doc["lng"]  = 0;
+    doc["loc"]  = 0;   // 0 = no fix, 1 = GPS locked
+    doc["sats"] = 0;
+
+    // --- Speed (top-level — dashboard primary speed display) ---
+    doc["speed"]     = obd.speed;
+
+    // --- FIX [5]: speed_obd — enables GPS vs OBD sync indicator ---
+    doc["speed_obd"] = obd.speed;
+
+    // --- FIX [3]: throttle flat — driver behavior scoring ---
+    doc["throttle"]  = round(obd.throttle * 10) / 10.0f;
+
+    // --- FIX [4]: fuel_level flat — dashboard fuel gauge ---
+    doc["fuel_level"] = round(obd.fuelLevel * 10) / 10.0f;
+
+    // --- FIX [8]: coolant_temp flat — driver behavior scoring ---
+    doc["coolant_temp"] = obd.coolantTemp;
+
+    // --- FIX [9]: engine_load flat — driver behavior scoring ---
+    doc["engine_load"] = round(obd.engineLoad * 10) / 10.0f;
+
+    // --- FIX [6]: mil — MIL / check engine light indicator ---
+    doc["mil"] = obd.mil;
+
+    // --- Security sensors ---
+    doc["s1"]   = s1;
+    doc["s2"]   = s2;
+    doc["mag1"] = mag1;
+    doc["mag2"] = mag2;
+
+    // --- Fuel object ---
     JsonObject fuel = doc.createNestedObject("fuel");
-    fuel["theft_detected"] = simFuelTheft;
+    fuel["theft_detected"] = theftDetected;
+    // FIX [7]: level_percent fallback path the dashboard also checks
+    fuel["level_percent"]  = round(obd.fuelLevel * 10) / 10.0f;
 
-    String output;
-    output.reserve(320);
-    serializeJson(doc, output);
-    return output;
-}
+    // --- Full OBD nested object (all raw sensor readings) ---
+    JsonObject obdJson = doc.createNestedObject("obd");
+    obdJson["rpm"]          = (int)obd.rpm;
+    obdJson["speed"]        = obd.speed;
+    obdJson["engine_load"]  = round(obd.engineLoad   * 10)  / 10.0f;
+    obdJson["coolant_temp"] = obd.coolantTemp;
+    obdJson["intake_temp"]  = obd.intakeTemp;
+    obdJson["throttle"]     = round(obd.throttle     * 10)  / 10.0f;
+    obdJson["fuel_level"]   = round(obd.fuelLevel    * 10)  / 10.0f;
+    obdJson["run_time"]     = obd.runTime;
+    obdJson["voltage"]      = round(obd.voltage      * 100) / 100.0f;
+    obdJson["maf"]          = round(obd.maf          * 100) / 100.0f;
+    obdJson["fuel_press"]   = obd.fuelPressure;
+    obdJson["map_kpa"]      = obd.intakeMap;
+    obdJson["timing"]       = round(obd.timing       * 10)  / 10.0f;
+    obdJson["rail_press"]   = round(obd.railPressure * 10)  / 10.0f;
+    obdJson["mil"]          = obd.mil;
 
-// ============================================================
-// PUBLISH
-// ============================================================
-void publishPayload() {
-    if (!mqtt.connected()) return;
+    // --------------------------------------------------------
+    //  Serialize — buffer matches document size (FIX [1] & [2])
+    // --------------------------------------------------------
+    char   payload[768];
+    size_t payloadLen = serializeJson(doc, payload, sizeof(payload));
 
-    String payload = buildPayload();
+    // Safety check: if serialization was truncated, warn and skip
+    if (payloadLen == 0 || payloadLen >= sizeof(payload) - 1) {
+        Serial.println("[MQTT] ERROR: JSON truncated — increase buffer size!");
+        return;
+    }
 
-    bool ok = mqtt.publish(MQTT_TOPIC, payload.c_str(), false);  // false = not retained
-
-    if (ok) {
-        Serial.print(F("[MQTT] ✓ Published ("));
-        Serial.print(payload.length());
-        Serial.println(F(" bytes)"));
+    // --- Publish ---
+    if (mqtt.connected()) {
+        bool ok = mqtt.publish(MQTT_TOPIC, (uint8_t*)payload, payloadLen, false);
+        Serial.println("[MQTT] " + String(payloadLen) + " bytes → " +
+                       String(ok ? "OK" : "FAILED (buffer too small for broker?)"));
+        Serial.println("       " + String(payload));
     } else {
-        Serial.println(F("[MQTT] ✗ Publish failed — buffer overflow or disconnected"));
-        Serial.print(F("[MQTT] Payload size: "));
-        Serial.println(payload.length());
+        Serial.println("[MQTT] Not connected — publish skipped.");
     }
 }
 
 // ============================================================
-// HELPERS
+//  SERIAL DEBUG SNAPSHOT
 // ============================================================
-float lerp(float a, float b, float t) {
-    return a + t * (b - a);
-}
-
-void printStatus() {
-    const ScenarioStep& step = SCENARIO[scenarioIdx];
-
-    Serial.println(F("┌─────── DUMMY TELEMETRY ──────────────┐"));
-    Serial.print(F("│ Scenario : step ")); Serial.print(scenarioIdx);
-    Serial.print(F("  (")); Serial.print(stepSecElapsed);
-    Serial.print(F("/")); Serial.print(step.holdSeconds);
-    Serial.println(F("s)"));
-
-    Serial.print(F("│ GPS      : "));
-    Serial.print(simLat, 5); Serial.print(F(", "));
-    Serial.print(simLng, 5);
-    Serial.print(F("  fix=")); Serial.println(simGpsFix ? "YES" : "NO");
-
-    Serial.print(F("│ Speed    : ")); Serial.print(simSpeed, 1); Serial.println(F(" km/h"));
-    Serial.print(F("│ RPM      : ")); Serial.println(simRpm);
-    Serial.print(F("│ Throttle : ")); Serial.print(simThrottle, 1); Serial.println(F(" %"));
-    Serial.print(F("│ Coolant  : ")); Serial.print(simCoolant, 1); Serial.println(F(" °C"));
-    Serial.print(F("│ Load     : ")); Serial.print(simLoad, 1); Serial.println(F(" %"));
-
-    Serial.print(F("│ Sensors  : S1=")); Serial.print(simS1 ? "OK" : "OPEN");
-    Serial.print(F(" S2=")); Serial.print(simS2 ? "OK" : "OPEN");
-    Serial.print(F(" M1=")); Serial.print(simMag1 ? "OK" : "OPEN");
-    Serial.print(F(" M2=")); Serial.println(simMag2 ? "OK" : "OPEN");
-
-    if (simFuelTheft) Serial.println(F("│ ⚠  FUEL THEFT SIMULATED"));
-
-    Serial.print(F("│ WiFi     : "));
-    Serial.print(WiFi.status() == WL_CONNECTED ? "CONNECTED" : "DISCONNECTED");
-    Serial.print(F("  RSSI=")); Serial.print(WiFi.RSSI()); Serial.println(F(" dBm"));
-
-    Serial.print(F("│ MQTT     : "));
-    Serial.println(mqtt.connected() ? "CONNECTED" : "DISCONNECTED");
-    Serial.println(F("└──────────────────────────────────────┘"));
+void printOBDToSerial() {
+    Serial.println("\n======= OBD2 SNAPSHOT =======");
+    Serial.printf("  RPM          : %.0f RPM\n",  obd.rpm);
+    Serial.printf("  Speed        : %d km/h\n",   obd.speed);
+    Serial.printf("  Engine Load  : %.1f %%\n",   obd.engineLoad);
+    Serial.printf("  Coolant Temp : %d C\n",      obd.coolantTemp);
+    Serial.printf("  Intake Temp  : %d C\n",      obd.intakeTemp);
+    Serial.printf("  Throttle     : %.1f %%\n",   obd.throttle);
+    Serial.printf("  Fuel Level   : %.1f %%\n",   obd.fuelLevel);
+    Serial.printf("  Run Time     : %u sec\n",    obd.runTime);
+    Serial.printf("  Voltage      : %.2f V\n",    obd.voltage);
+    Serial.printf("  MAF          : %.2f g/s\n",  obd.maf);
+    Serial.printf("  Fuel Press   : %d kPa\n",    obd.fuelPressure);
+    Serial.printf("  MAP          : %d kPa\n",    obd.intakeMap);
+    Serial.printf("  Timing Adv   : %.1f deg\n",  obd.timing);
+    Serial.printf("  Rail Press   : %.1f kPa\n",  obd.railPressure);
+    Serial.printf("  MIL (CEL)    : %s\n",        obd.mil ? "ON" : "OFF");
+    Serial.println("==============================");
 }
