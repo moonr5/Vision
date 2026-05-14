@@ -897,127 +897,149 @@
             font-size: 11px; color: #064e3b; line-height: 1.5;
         }
 
+        /* ── Modern Compact Toast ───────────────────────────────────── */
         .toast-item {
-            width: 300px;
+            width: 260px;
             position: relative;
             pointer-events: all;
-            animation: toastPopUp 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
-            margin-bottom: 8px;
-            filter: drop-shadow(0 8px 24px rgba(0,0,0,0.18));
+            animation: toastPopUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.12));
         }
         .toast-item.removing {
-            animation: toastPopDown 0.3s ease-in forwards;
+            animation: toastPopDown 0.25s ease-in forwards;
             pointer-events: none;
         }
         @keyframes toastPopUp {
-            0%   { opacity: 0; transform: translateY(40px) scale(0.85); }
+            0%   { opacity: 0; transform: translateY(16px) scale(0.96); }
             100% { opacity: 1; transform: translateY(0)   scale(1);    }
         }
         @keyframes toastPopDown {
             0%   { opacity: 1; transform: translateY(0)   scale(1);    }
-            100% { opacity: 0; transform: translateY(20px) scale(0.9); }
+            100% { opacity: 0; transform: translateY(8px) scale(0.96); }
         }
-        .toast-chat {
-            position: relative;
+        .toast-body {
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-left: 3px solid #9ca3af;
+            overflow: hidden;
+        }
+        .toast-item.t-critical .toast-body { background: #fff1f2; border-left-color: #ef4444; }
+        .toast-item.t-warning  .toast-body { background: #fffbeb; border-left-color: #f59e0b; }
+        .toast-item.t-info     .toast-body { background: #eff6ff; border-left-color: #3b82f6; }
+        .toast-item.t-success  .toast-body { background: #f0fdf4; border-left-color: #10b981; }
+        .toast-item.t-security .toast-body { background: #f5f3ff; border-left-color: #8b5cf6; }
+        .toast-item.t-buffered .toast-body { background: #eef2ff; border-left-color: #6366f1; }
+        .toast-item.t-behavior .toast-body { background: #fff7ed; border-left-color: #f97316; }
+        .toast-main {
             display: flex;
             align-items: flex-start;
-            padding-left: 30px;
+            gap: 8px;
         }
-        .toast-avatar {
-            width: 58px;
-            height: 58px;
+        .toast-icon {
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             overflow: hidden;
             flex-shrink: 0;
-            position: absolute;
-            left: -6px;
-            top: 2px;
-            border: 3px solid #fff;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.20);
-            z-index: 2;
+            margin-top: 1px;
         }
-        .toast-avatar img {
+        .toast-icon img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .toast-bubble {
+        .toast-content {
             flex: 1;
             min-width: 0;
-            background: #fff8e1;
-            border-radius: 0 44px 44px 0;
-            padding: 10px 18px 10px 38px;
-            position: relative;
         }
-        /* Type-specific bubble background */
-        .toast-item.t-critical .toast-bubble { background: #fff1f2; }
-        .toast-item.t-warning  .toast-bubble { background: #fffbeb; }
-        .toast-item.t-info     .toast-bubble { background: #eff6ff; }
-        .toast-item.t-success  .toast-bubble { background: #f0fdf4; }
-        .toast-item.t-security .toast-bubble { background: #f5f3ff; }
-        .toast-item.t-buffered .toast-bubble { background: #eef2ff; }
-        .toast-item.t-behavior .toast-bubble { background: #fff7ed; }
+        .toast-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
         .toast-title {
             font-size: 11px;
             font-weight: 600;
-            color: #1e293b;
+            color: #111827;
             line-height: 1.3;
         }
         .toast-msg {
             font-size: 10px;
-            color: #64748b;
+            color: #6b7280;
             line-height: 1.4;
             margin-top: 2px;
         }
-        .toast-user {
-            display: inline-block;
+        .toast-ai {
             font-size: 9px;
-            font-weight: 700;
-            font-style: normal;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 2px 10px 2px 10px;
-            border-radius: 0 0 10px 0;
-            background: #fff;
-            color: #83aebd;
-            white-space: nowrap;
+            color: #4f46e5;
+            line-height: 1.35;
+            margin-top: 4px;
+            font-weight: 500;
+            display: flex;
+            align-items: flex-start;
+            gap: 3px;
         }
-        .toast-item.t-critical .toast-user { color: #ef4444; }
-        .toast-item.t-warning  .toast-user { color: #f59e0b; }
-        .toast-item.t-info     .toast-user { color: #3b82f6; }
-        .toast-item.t-success  .toast-user { color: #10b981; }
-        .toast-item.t-security .toast-user { color: #8b5cf6; }
-        .toast-item.t-buffered .toast-user { color: #6366f1; }
-        .toast-item.t-behavior .toast-user { color: #f97316; }
+        .toast-ai::before {
+            content: '';
+            display: block;
+            width: 12px;
+            height: 12px;
+            flex-shrink: 0;
+            margin-top: 0.5px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zM11 11l1.25-2.75L15 7l-2.75-1.25L11 3l-1.25 2.75L7 7l2.75 1.25L11 11zm7 9l-1.25-2.75L13 15l2.75-1.25L17 11l1.25 2.75L21 15l-2.75 1.25L17 20zm-8.5-3.5L7 15l-1.25 2.75L3 19l2.75 1.25L7 23l1.25-2.75L11 19l-2.75-1.25z'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.7;
+        }
+        .toast-ai.hidden { display: none; }
+        .toast-tag {
+            display: inline-block;
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+        .toast-item.t-critical .toast-tag { color: #ef4444; }
+        .toast-item.t-warning  .toast-tag { color: #f59e0b; }
+        .toast-item.t-info     .toast-tag { color: #3b82f6; }
+        .toast-item.t-success  .toast-tag { color: #10b981; }
+        .toast-item.t-security .toast-tag { color: #8b5cf6; }
+        .toast-item.t-buffered .toast-tag { color: #6366f1; }
+        .toast-item.t-behavior .toast-tag { color: #f97316; }
         .toast-close {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94a3b8;
+            color: #9ca3af;
             background: transparent;
             border: none;
             cursor: pointer;
             transition: all 0.15s ease;
-            z-index: 3;
+            flex-shrink: 0;
+            margin-top: -2px;
+            margin-right: -2px;
         }
         .toast-close:hover {
-            color: #475569;
-            background: #f1f5f9;
+            color: #4b5563;
+            background: #f3f4f6;
         }
         .toast-progress {
             position: absolute;
             bottom: 0;
-            left: 20px;
-            right: 4px;
+            left: 12px;
+            right: 12px;
             height: 2px;
-            background: rgba(0,0,0,0.06);
-            border-radius: 0 0 0 2px;
+            background: rgba(0,0,0,0.04);
+            border-radius: 1px;
             overflow: hidden;
         }
         .toast-progress::after {
@@ -1025,65 +1047,9 @@
             position: absolute;
             left: 0; top: 0; bottom: 0;
             width: 100%;
-            background: linear-gradient(90deg, rgba(99,102,241,0.4), rgba(139,92,246,0.4));
+            background: linear-gradient(90deg, rgba(79,70,229,0.5), rgba(139,92,246,0.5));
             animation: toastProgress linear forwards;
         }
-        .toast-ai-insight {
-            margin-top: 6px;
-            padding: 6px 8px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.65);
-            border: 1px solid rgba(99,102,241,0.14);
-            backdrop-filter: blur(4px);
-        }
-        .toast-ai-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            font-size: 8px;
-            font-weight: 800;
-            color: #6366f1;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 2px;
-        }
-        .toast-ai-text {
-            display: block;
-            font-size: 10px;
-            color: #3730a3;
-            line-height: 1.35;
-            font-weight: 500;
-        }
-        .toast-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 7px;
-            gap: 6px;
-        }
-        .toast-quick-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            padding: 3px 9px;
-            border-radius: 6px;
-            font-size: 9px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            letter-spacing: 0.02em;
-            transition: all 0.15s ease;
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .toast-quick-btn:hover { filter: brightness(0.95); transform: translateY(-1px); }
-        .toast-item.t-critical .toast-quick-btn  { background: rgba(239,68,68,0.1);   color: #dc2626; }
-        .toast-item.t-warning  .toast-quick-btn  { background: rgba(245,158,11,0.1);  color: #d97706; }
-        .toast-item.t-security .toast-quick-btn  { background: rgba(139,92,246,0.1);  color: #7c3aed; }
-        .toast-item.t-success  .toast-quick-btn  { background: rgba(16,185,129,0.1);  color: #059669; }
-        .toast-item.t-info     .toast-quick-btn  { background: rgba(59,130,246,0.1);  color: #2563eb; }
-        .toast-item.t-behavior .toast-quick-btn  { background: rgba(249,115,22,0.1);  color: #ea580c; }
-        .toast-item.t-buffered .toast-quick-btn  { background: rgba(99,102,241,0.1);  color: #4f46e5; }
 
         /* Driver Management Styles */
         .driver-filter.active {
@@ -4726,33 +4692,28 @@
             const alertId = 'toast-' + Date.now();
             const cfg = _toastConfig(type);
 
-            const _quickFn = cfg.quickFn.replace(/ALERTID/g, alertId);
             const html = `
             <div id="${alertId}" data-title="${_esc(title)}"
                  class="toast-item ${cfg.cls}">
-                <div class="toast-chat">
-                    <div class="toast-avatar">
-                        <img src="${cfg.avatar}" alt="">
-                    </div>
-                    <div style="flex:1;min-width:0">
-                        <div class="toast-bubble">
-                            <button onclick="removeAlert('${alertId}')" class="toast-close">
-                                <span class="material-symbols-outlined text-[12px]">close</span>
-                            </button>
-                            <p class="toast-title">${_esc(title)}</p>
+                <div class="toast-body">
+                    <div class="toast-main">
+                        <div class="toast-icon">
+                            <img src="${cfg.avatar}" alt="">
+                        </div>
+                        <div class="toast-content">
+                            <div class="toast-header">
+                                <p class="toast-title">${_esc(title)}</p>
+                                <button onclick="removeAlert('${alertId}')" class="toast-close">
+                                    <span class="material-symbols-outlined" style="font-size:12px">close</span>
+                                </button>
+                            </div>
                             <p class="toast-msg">${_esc(message)}</p>
                             ${aiInsight ? `
-                            <div class="toast-ai-insight">
-                                <span class="toast-ai-badge"><span class="material-symbols-outlined" style="font-size:9px">auto_awesome</span>AI Insight</span>
-                                <span class="toast-ai-text">${_esc(aiInsight)}</span>
-                            </div>` : `
-                            <div class="toast-ai-insight hidden" id="${alertId}-ai">
-                                <span class="toast-ai-badge"><span class="material-symbols-outlined" style="font-size:9px">auto_awesome</span>AI Insight</span>
-                                <span class="toast-ai-text"></span>
-                            </div>`}
+                            <p class="toast-ai">${_esc(aiInsight)}</p>` : `
+                            <p class="toast-ai hidden" id="${alertId}-ai"></p>`}
                         </div>
-                        <div class="toast-user">${_esc(cfg.name)}</div>
                     </div>
+                    <div class="toast-tag">${_esc(cfg.name)}</div>
                 </div>
                 <div class="toast-progress" style="animation-duration:${duration}ms"></div>
             </div>`;
@@ -4778,10 +4739,9 @@
         function _toastInjectAI(alertId, text) {
             const el = document.getElementById(alertId);
             if (!el) return;
-            const box  = el.querySelector(`#${alertId}-ai`);
-            const span = el.querySelector(`#${alertId}-ai .toast-ai-text`);
-            if (box && span) {
-                span.textContent = text;
+            const box = el.querySelector(`#${alertId}-ai`);
+            if (box) {
+                box.textContent = text;
                 box.classList.remove('hidden');
             }
         }
@@ -6363,14 +6323,22 @@ Warnings: ${eventCounts.warning} | Critical: ${eventCounts.critical}`;
         }
 
         function buildAiSystemPrompt(context) {
+            const behavior = context.driverBehavior;
+            const recentAlerts = context.recentSystemAlerts || [];
             return `You are Monzer, a direct, helpful fleet assistant.
 
-DATA AVAILABLE:
-${JSON.stringify(context, null, 2)}
+LIVE DATA:
+System: ${context.systemStatus}
+Location: lat ${context.currentLocation?.lat?.toFixed(5) ?? 'N/A'}, lng ${context.currentLocation?.lng?.toFixed(5) ?? 'N/A'}
+Speed: ${context.currentLocation?.speed ?? 0} km/h
+Sensor events: ${context.sensorEventCounts?.info ?? 0} info, ${context.sensorEventCounts?.warning ?? 0} warnings, ${context.sensorEventCounts?.critical ?? 0} critical
+${recentAlerts.length ? `Recent alerts: ${recentAlerts.map(a => `[${a.severity}] ${a.event}`).join('; ')}` : 'No recent alerts'}
+${behavior ? `Driver: ${behavior.activeDriverName} (score ${behavior.safetyScore})` : 'No active driver'}
 
 RULES:
 - Answer directly without introductions or "As an AI..."
 - Use the data provided - be specific with numbers when available
+- Distinguish sensor/vehicle alerts from driver behavior issues
 - If data is missing, say exactly what's needed
 - Plain text only, no markdown or emojis
 - 1-3 sentences max`;
