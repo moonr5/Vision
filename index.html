@@ -48,10 +48,11 @@
     <style>
         /* Typography */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+        @import url("https://fonts.googleapis.com/css?family=Lato:400i,600");
         
         /* Clean Light Background */
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Lato', sans-serif; 
             background: #f5f6fa;
             color: #1a1a2e;
         }
@@ -897,148 +898,134 @@
             font-size: 11px; color: #064e3b; line-height: 1.5;
         }
 
-        /* ── Modern Compact Toast ───────────────────────────────────── */
+        /* ── Toast: Exact Chat Bubble Style ─────────────────────────── */
+        #alert-container {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(420px, 94vw);
+            padding: 0 4px;
+        }
         .toast-item {
-            width: 260px;
             position: relative;
             pointer-events: all;
-            animation: toastPopUp 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
-            margin-bottom: 6px;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.12));
+            width: 100%;
         }
         .toast-item.removing {
-            animation: toastPopDown 0.25s ease-in forwards;
+            animation: toastOut 0.25s ease-in forwards;
             pointer-events: none;
         }
-        @keyframes toastPopUp {
-            0%   { opacity: 0; transform: translateY(16px) scale(0.96); }
-            100% { opacity: 1; transform: translateY(0)   scale(1);    }
+        @keyframes toastOut {
+            0%   { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-10px) scale(0.96); }
         }
-        @keyframes toastPopDown {
-            0%   { opacity: 1; transform: translateY(0)   scale(1);    }
-            100% { opacity: 0; transform: translateY(8px) scale(0.96); }
-        }
-        .toast-body {
-            background: #fff;
-            border-radius: 12px;
-            padding: 10px 12px;
-            border: 1px solid rgba(0,0,0,0.06);
-            border-left: 3px solid #9ca3af;
-            overflow: hidden;
-        }
-        .toast-item.t-critical .toast-body { background: #fff1f2; border-left-color: #ef4444; }
-        .toast-item.t-warning  .toast-body { background: #fffbeb; border-left-color: #f59e0b; }
-        .toast-item.t-info     .toast-body { background: #eff6ff; border-left-color: #3b82f6; }
-        .toast-item.t-success  .toast-body { background: #f0fdf4; border-left-color: #10b981; }
-        .toast-item.t-security .toast-body { background: #f5f3ff; border-left-color: #8b5cf6; }
-        .toast-item.t-buffered .toast-body { background: #eef2ff; border-left-color: #6366f1; }
-        .toast-item.t-behavior .toast-body { background: #fff7ed; border-left-color: #f97316; }
-        .toast-main {
+
+        /* User's exact chat component styles */
+        .chat {
+            position: relative;
             display: flex;
             align-items: flex-start;
-            gap: 8px;
+            width: fit-content;
+            max-width: 95%;
+            animation: popFromBottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .toast-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            overflow: hidden;
+        @keyframes popFromBottom {
+            0% { transform: translateY(30px) scale(0.95); opacity: 0; }
+            100% { transform: translateY(0px) scale(1); opacity: 1; }
+        }
+        .profile {
             flex-shrink: 0;
-            margin-top: 1px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 2.5px solid #ffffff;
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            z-index: 2;
+            background: #eee;
         }
-        .toast-icon img {
+        .profile img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .toast-content {
-            flex: 1;
-            min-width: 0;
-        }
-        .toast-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 6px;
-        }
-        .toast-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: #111827;
-            line-height: 1.3;
-        }
-        .toast-msg {
-            font-size: 10px;
-            color: #6b7280;
-            line-height: 1.4;
-            margin-top: 2px;
-        }
-        .toast-ai {
-            font-size: 9px;
-            color: #4f46e5;
-            line-height: 1.35;
-            margin-top: 4px;
-            font-weight: 500;
-            display: flex;
-            align-items: flex-start;
-            gap: 3px;
-        }
-        .toast-ai::before {
-            content: '';
-            display: block;
-            width: 12px;
-            height: 12px;
-            flex-shrink: 0;
-            margin-top: 0.5px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zM11 11l1.25-2.75L15 7l-2.75-1.25L11 3l-1.25 2.75L7 7l2.75 1.25L11 11zm7 9l-1.25-2.75L13 15l2.75-1.25L17 11l1.25 2.75L21 15l-2.75 1.25L17 20zm-8.5-3.5L7 15l-1.25 2.75L3 19l2.75 1.25L7 23l1.25-2.75L11 19l-2.75-1.25z'/%3E%3C/svg%3E");
-            background-size: contain;
-            background-repeat: no-repeat;
-            opacity: 0.7;
-        }
-        .toast-ai.hidden { display: none; }
-        .toast-tag {
-            display: inline-block;
-            font-size: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #9ca3af;
+        .content-area {
+            flex-grow: 1;
+            margin-left: -12px;
             margin-top: 6px;
-        }
-        .toast-item.t-critical .toast-tag { color: #ef4444; }
-        .toast-item.t-warning  .toast-tag { color: #f59e0b; }
-        .toast-item.t-info     .toast-tag { color: #3b82f6; }
-        .toast-item.t-success  .toast-tag { color: #10b981; }
-        .toast-item.t-security .toast-tag { color: #8b5cf6; }
-        .toast-item.t-buffered .toast-tag { color: #6366f1; }
-        .toast-item.t-behavior .toast-tag { color: #f97316; }
-        .toast-close {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            flex-shrink: 0;
-            margin-top: -2px;
-            margin-right: -2px;
+            flex-direction: column;
         }
-        .toast-close:hover {
+        .message {
+            background: #ffe271;
+            padding: 6px 20px 6px 25px;
+            border-radius: 0 15px 15px 0;
+            font-size: 13px;
+            color: rgba(0,0,0,0.7);
+            font-style: italic;
+            line-height: 1.3;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+            white-space: normal;
+            word-break: break-word;
+        }
+        .user {
+            background: #ffffff;
+            padding: 3px 15px 4px 30px;
+            border-radius: 0 0 12px 0;
+            font-size: 12px;
+            color: #83aebd;
+            font-weight: 600;
+            font-style: normal;
+            align-self: flex-start;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+            margin-top: -1px;
+        }
+
+        /* Type-specific message colors */
+        .toast-item.t-critical .message { background: #ff6b6b; color: #fff; }
+        .toast-item.t-warning  .message { background: #ffe271; color: rgba(0,0,0,0.7); }
+        .toast-item.t-info     .message { background: #74c0fc; color: rgba(0,0,0,0.7); }
+        .toast-item.t-success  .message { background: #8ce99a; color: rgba(0,0,0,0.7); }
+        .toast-item.t-security .message { background: #ffa8a8; color: rgba(0,0,0,0.7); }
+        .toast-item.t-buffered .message { background: #bac8ff; color: rgba(0,0,0,0.7); }
+        .toast-item.t-behavior .message { background: #ffe271; color: rgba(0,0,0,0.7); }
+
+        .toast-ai-compact {
+            margin: 6px 0 0 52px;
+            font-size: 11px;
             color: #4b5563;
-            background: #f3f4f6;
+            line-height: 1.4;
+            max-width: calc(100% - 60px);
+            font-weight: 500;
+            display: none;
+            background: rgba(255,255,255,0.75);
+            padding: 5px 10px;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
+        .toast-ai-compact.show {
+            display: block;
+            animation: aiFadeIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes aiFadeIn {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
         .toast-progress {
             position: absolute;
-            bottom: 0;
-            left: 12px;
-            right: 12px;
+            bottom: -4px;
+            left: 52px;
+            right: 10px;
             height: 2px;
-            background: rgba(0,0,0,0.04);
+            background: rgba(0,0,0,0.05);
             border-radius: 1px;
             overflow: hidden;
         }
@@ -1049,6 +1036,12 @@
             width: 100%;
             background: linear-gradient(90deg, rgba(79,70,229,0.5), rgba(139,92,246,0.5));
             animation: toastProgress linear forwards;
+        }
+
+        /* Mobile specific tweak */
+        @media (max-width: 480px) {
+            .message { white-space: normal; }
+            .chat { width: 90%; }
         }
 
         /* Driver Management Styles */
@@ -1076,6 +1069,70 @@
         @keyframes statusPulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
+        }
+
+        /* Trend Chart Styles */
+        .trend-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 52px;
+            padding: 0 2px;
+        }
+        .trend-bar-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+            cursor: default;
+        }
+        .trend-bar {
+            width: 100%;
+            border-radius: 6px 6px 2px 2px;
+            transition: height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            min-height: 3px;
+        }
+        .trend-bar-today {
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 0 0 0 3.5px rgba(16,185,129,0.35);
+            border-radius: 6px 6px 2px 2px;
+        }
+        .trend-bar-wrap:hover .trend-bar {
+            filter: brightness(1.08);
+        }
+        .trend-label {
+            font-size: 9px;
+            color: #9ca3af;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .trend-label-today {
+            color: #374151;
+            font-weight: 700;
+        }
+        .trend-tooltip {
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #1f2937;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .trend-bar-wrap:hover .trend-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
         }
 
         /* Chart bar animations */
@@ -1254,11 +1311,8 @@
         @media (max-width: 768px) {
             #alert-container {
                 width: auto;
-                max-width: 92vw;
+                max-width: min(420px, 94vw);
                 top: max(1.25rem, env(safe-area-inset-top));
-            }
-            .toast-item {
-                width: 260px;
             }
         }
 
@@ -1388,16 +1442,10 @@
             max-height: none;
         }
 
-        /* ── Toast: fully responsive width ──────────────────────────── */
+        /* ── Toast: compact width ──────────────────────────────────── */
         #alert-container {
             width: auto;
-            max-width: min(380px, 92vw);
-        }
-        @media (max-width: 480px) {
-            .toast-item {
-                width: 92vw !important;
-                max-width: 320px;
-            }
+            max-width: min(420px, 94vw);
         }
 
         /* ── Bottom live panel: auto height ─────────────────────────── */
@@ -1770,12 +1818,10 @@
                 height: 2.25rem;
             }
 
-            /* Toast container respects mobile width */
+            /* Toast compact on mobile */
             #alert-container {
-                max-width: 92vw !important;
-                width: 92vw !important;
-                left: 4vw !important;
-                transform: none !important;
+                width: auto;
+                max-width: min(420px, 94vw);
             }
 
             /* General overflow safety for cards and panels */
@@ -4655,10 +4701,9 @@
             s2: 1
         };
         
-        // ── Toast Notification System ────────────────────────────────
-        // Bottom-right stack, max 4 visible, newest on top, dedup by title,
-        // optional AI insight line fetched async from Gemini.
-        const TOAST_MAX = 4;
+        // ── Alert Notification System ────────────────────────────────
+        // Full-screen modal style, max 1 visible, AI insight fetched async from Gemini.
+        const TOAST_MAX = 1;
         const _toastTimers = {};   // alertId → setTimeout handle
 
         function showAlert(type, title, message, duration = 5000, aiInsight = null) {
@@ -4669,20 +4714,22 @@
             const existing = [...container.querySelectorAll('.toast-item')]
                 .find(el => el.dataset.title === title);
             if (existing) {
-                // bump its timer and update message
                 const eid = existing.id;
                 clearTimeout(_toastTimers[eid]);
-                existing.querySelector('.toast-msg').textContent = message;
-                existing.querySelector('.toast-progress').style.animationDuration = duration + 'ms';
-                existing.querySelector('.toast-progress').style.animation = 'none';
-                requestAnimationFrame(() => {
-                    existing.querySelector('.toast-progress').style.animation = `toastProgress ${duration}ms linear forwards`;
-                });
+                const _msgEl = existing.querySelector('.message');
+                if (_msgEl) _msgEl.textContent = message;
+                const progress = existing.querySelector('.toast-progress');
+                if (progress) {
+                    progress.style.animationDuration = duration + 'ms';
+                    progress.style.animation = 'none';
+                    requestAnimationFrame(() => {
+                        progress.style.animation = `toastProgress ${duration}ms linear forwards`;
+                    });
+                }
                 _toastTimers[eid] = setTimeout(() => removeAlert(eid), duration);
                 return eid;
             }
 
-            // ── Enforce max 4: silently drop oldest non-critical when full ──
             const all = [...container.querySelectorAll('.toast-item:not(.removing)')];
             if (all.length >= TOAST_MAX) {
                 const oldest = all.find(el => !el.classList.contains('t-critical')) || all[0];
@@ -4693,36 +4740,25 @@
             const cfg = _toastConfig(type);
 
             const html = `
-            <div id="${alertId}" data-title="${_esc(title)}"
-                 class="toast-item ${cfg.cls}">
-                <div class="toast-body">
-                    <div class="toast-main">
-                        <div class="toast-icon">
-                            <img src="${cfg.avatar}" alt="">
-                        </div>
-                        <div class="toast-content">
-                            <div class="toast-header">
-                                <p class="toast-title">${_esc(title)}</p>
-                                <button onclick="removeAlert('${alertId}')" class="toast-close">
-                                    <span class="material-symbols-outlined" style="font-size:12px">close</span>
-                                </button>
-                            </div>
-                            <p class="toast-msg">${_esc(message)}</p>
-                            ${aiInsight ? `
-                            <p class="toast-ai">${_esc(aiInsight)}</p>` : `
-                            <p class="toast-ai hidden" id="${alertId}-ai"></p>`}
-                        </div>
+            <div id="${alertId}" data-title="${_esc(title)}" class="toast-item ${cfg.cls}">
+                <div class="chat">
+                    <div class="profile">
+                        <img src="${cfg.avatar}" alt="">
                     </div>
-                    <div class="toast-tag">${_esc(cfg.name)}</div>
+                    <div class="content-area">
+                        <div class="message">${_esc(message || title)}</div>
+                        <div class="user">${_esc(cfg.name)}</div>
+                    </div>
                 </div>
+                ${aiInsight
+                    ? `<div class="toast-ai-compact show">${_esc(aiInsight)}</div>`
+                    : `<div class="toast-ai-compact hidden" id="${alertId}-ai"></div>`}
                 <div class="toast-progress" style="animation-duration:${duration}ms"></div>
             </div>`;
 
-            // Prepend so newest appears at top of stack
             container.insertAdjacentHTML('afterbegin', html);
 
             if (cfg.sound) playAlertSound();
-
             _toastTimers[alertId] = setTimeout(() => removeAlert(alertId), duration);
             return alertId;
         }
@@ -4743,7 +4779,19 @@
             if (box) {
                 box.textContent = text;
                 box.classList.remove('hidden');
+                box.classList.add('show');
             }
+            // Extend timer so user has time to read the AI insight
+            clearTimeout(_toastTimers[alertId]);
+            const progress = el.querySelector('.toast-progress');
+            if (progress) {
+                progress.style.animationDuration = '8000ms';
+                progress.style.animation = 'none';
+                requestAnimationFrame(() => {
+                    progress.style.animation = 'toastProgress 8000ms linear forwards';
+                });
+            }
+            _toastTimers[alertId] = setTimeout(() => removeAlert(alertId), 8000);
         }
 
         // Map type string → CSS class + icon + user name + avatar + sound flag
@@ -5155,7 +5203,7 @@
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag2 !== null) {
                     if ((prevSensorStates.mag1 === 1 && data.mag1 === 0) ||
                         (prevSensorStates.mag2 === 1 && data.mag2 === 0)) {
-                        const _tid = showAlert('security', 'Storage Opened', 'A storage compartment was unexpectedly opened', 8000);
+                        const _tid = showAlert('security', 'Storage Opened', 'A storage compartment was unexpectedly opened', 12000);
                         logReport('WARNING', 'Storage Opened', 'A storage compartment was opened unexpectedly', data.speed);
                         pushTechAlert('WARNING', 'Storage Opened', 'A storage compartment was opened');
                         if (_tid) getAiAlertInsight(_tid, 'Storage Opened', 'WARNING', 'Storage compartment unexpectedly opened', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
@@ -5165,28 +5213,28 @@
                 // 3. Sensor Trigger Alerts - Alert when value changes from 1 to 0 (opened)
                 // Logic: 1 = Closed/Normal (Orange), 0 = Open/Alert (Red)
                 if (prevSensorStates.s1 !== null && prevSensorStates.s1 === 1 && data.s1 === 0) {
-                    const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 10000);
                     logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
                     pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
                     if (_tid) getAiAlertInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 if (prevSensorStates.s2 !== null && prevSensorStates.s2 === 1 && data.s2 === 0) {
-                    const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Fuel Cap Opened', 'The fuel cap was opened — check the vehicle', 10000);
                     logReport('WARNING', 'Fuel Cap Opened', 'The fuel cap was opened', data.speed);
                     pushTechAlert('WARNING', 'Fuel Cap Opened', 'Fuel cap access detected');
                     if (_tid) getAiAlertInsight(_tid, 'Fuel Cap Opened', 'WARNING', 'Fuel cap opened while vehicle active', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 if (prevSensorStates.mag1 !== null && prevSensorStates.mag1 === 1 && data.mag1 === 0) {
-                    const _tid = showAlert('security', 'Door 1 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Door 1 Opened', 'A compartment was opened — check the vehicle', 10000);
                     logReport('WARNING', 'Door 1 Opened', 'Door 1 was opened unexpectedly', data.speed);
                     pushTechAlert('WARNING', 'Door 1 Opened', 'Door 1 was opened');
                     if (_tid) getAiAlertInsight(_tid, 'Door 1 Opened', 'WARNING', 'Door 1 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
                 }
 
                 if (prevSensorStates.mag2 !== null && prevSensorStates.mag2 === 1 && data.mag2 === 0) {
-                    const _tid = showAlert('security', 'Door 2 Opened', 'A compartment was opened — check the vehicle', 6000);
+                    const _tid = showAlert('security', 'Door 2 Opened', 'A compartment was opened — check the vehicle', 10000);
                     logReport('WARNING', 'Door 2 Opened', 'Door 2 was opened unexpectedly', data.speed);
                     pushTechAlert('WARNING', 'Door 2 Opened', 'Door 2 was opened');
                     if (_tid) getAiAlertInsight(_tid, 'Door 2 Opened', 'WARNING', 'Door 2 opened unexpectedly', { speed: data.speed || 0, rpm: data.rpm || 0, throttle: data.throttle || 0, coolantTemp: data.coolant_temp || 0, engineLoad: data.engine_load || 0 }, drivers.find(d => d.id === ACTIVE_DRIVER_ID)?.name || 'Driver', 'security');
@@ -5980,7 +6028,7 @@
                 watchdogTriggered = true;
                 logReport('WARNING', 'No Vehicle Data', 'No data received from the vehicle for over 10 minutes', 0);
                 pushTechAlert('WARNING', 'No Vehicle Data', 'The vehicle has not sent any data for over 10 minutes — check connection');
-                showAlert('warning', 'No Vehicle Data', 'The vehicle has not sent any data for over 10 minutes', 8000);
+                showAlert('warning', 'No Vehicle Data', 'The vehicle has not sent any data for over 10 minutes', 12000);
             }
         }
 
@@ -6508,15 +6556,18 @@ RULES:
                     `Details: ${details}\n` +
                     `Metrics: speed=${metrics.speed}km/h, RPM=${metrics.rpm}, throttle=${metrics.throttle}%, ` +
                     `coolant=${metrics.coolantTemp}°C, load=${metrics.engineLoad}%\n\n` +
-                    `As a ${cfg.role}, give the fleet manager 1-2 specific, actionable sentences about what to do next. ` +
-                    `Focus on: ${cfg.focus}. Be direct and specific.`;
+                    `You're texting a fleet manager. In one casual, natural sentence (max 12 words), tell them exactly what to do right now. ` +
+                    `Sound human — not like a manual. Focus on: ${cfg.focus}. No fluff.`;
 
                 const systemPrompt =
-                    `You are an expert ${cfg.role}. Respond with 1-2 short, highly specific sentences. ` +
-                    `Give exactly one concrete next action. Plain text only. No markdown, no bullet points.`;
+                    `You are a sharp, no-nonsense ${cfg.role} who talks like a real person. ` +
+                    `Respond with exactly 1 natural sentence (max 12 words). Be direct and conversational. ` +
+                    `Plain text only. No markdown, no bullet points, no robotic language.`;
 
                 const raw = await callGemini(prompt, systemPrompt);
-                const insight = sanitizeAiText(raw).split('\n')[0].trim();
+                let insight = sanitizeAiText(raw).split('\n')[0].trim();
+                const words = insight.split(/\s+/);
+                if (words.length > 15) insight = words.slice(0, 15).join(' ') + '...';
                 if (insight) _toastInjectAI(toastId, insight);
             } catch (e) {
                 // Silently fail — toast is already shown without insight
@@ -8554,17 +8605,35 @@ RULES:
                     
                     <!-- Weekly Trend Mini Chart -->
                     <div class="mt-4 pt-4 border-t border-gray-100">
-                        <p class="text-[10px] text-gray-400 mb-2">7-Day Score Trend</p>
-                        <div class="h-12 flex items-end gap-1">
-                            ${weeklyScores.map((score, i) => {
-                                const barColor = score >= 90 ? 'bg-emerald-400' : score >= 70 ? 'bg-amber-400' : 'bg-rose-400';
-                                return `
-                                    <div class="flex-1 flex flex-col items-center gap-1">
-                                        <div class="w-full ${barColor} rounded-t-sm" style="height: ${score * 0.4}px; max-height: 45px; min-height: 4px;"></div>
-                                        <span class="text-[8px] text-gray-400">${['M','T','W','T','F','S','S'][i]}</span>
-                                    </div>
-                                `;
-                            }).join('')}
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-[10px] text-gray-400">7-Day Score Trend</p>
+                            <span class="text-[9px] font-semibold text-gray-600">${weeklyScores[6]} today</span>
+                        </div>
+                        <div class="trend-chart">
+                            ${(() => {
+                                const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                                const dayLabels = [];
+                                for (let i = 6; i >= 0; i--) {
+                                    const d = new Date();
+                                    d.setDate(d.getDate() - i);
+                                    dayLabels.push(days[d.getDay()]);
+                                }
+                                return weeklyScores.map((score, i) => {
+                                    const isToday = i === 6;
+                                    const barGradient = score >= 90 
+                                        ? 'linear-gradient(180deg, #6ee7b7, #34d399)' 
+                                        : score >= 70 
+                                            ? 'linear-gradient(180deg, #fcd34d, #fbbf24)' 
+                                            : 'linear-gradient(180deg, #fca5a5, #f87171)';
+                                    return `
+                                        <div class="trend-bar-wrap">
+                                            <div class="trend-tooltip">${dayLabels[i]} · ${score}</div>
+                                            <div class="trend-bar ${isToday ? 'trend-bar-today' : ''}" style="height: ${Math.max(3, score * 0.42)}px; background: ${barGradient};"></div>
+                                            <span class="trend-label ${isToday ? 'trend-label-today' : ''}">${dayLabels[i]}</span>
+                                        </div>
+                                    `;
+                                }).join('');
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -8800,7 +8869,7 @@ RULES:
                 });
             }
 
-            return {
+            const b = {
                 safetyScore,
                 currentEvent: safetyScore < 70 ? currentEvent : 'Normal',
                 events,
@@ -8816,6 +8885,8 @@ RULES:
                     idleTime: Math.floor(Math.random() * 120)
                 }
             };
+            updateWeeklyScores({ behavior: b });
+            return b;
         }
 
         /**
@@ -9419,7 +9490,7 @@ RULES:
                     eventTriggered = true;
                     eventName    = 'Hard Braking';
                     eventType    = 'WARNING';
-                    eventDetails = `${speedDiff.toFixed(1)} km/h deceleration`;
+                    eventDetails = `Sudden hard braking — driver slammed the brakes`;
                     logDriverEvent(driver, eventName, eventType, eventDetails);
                 }
             }
@@ -9430,7 +9501,7 @@ RULES:
                 eventTriggered = true;
                 eventName    = 'Fast Acceleration';
                 eventType    = 'WARNING';
-                eventDetails = `Throttle ${telemetry.throttle}% at ${telemetry.speed} km/h`;
+                eventDetails = `Aggressive acceleration from a stop — ease off the gas`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
@@ -9440,7 +9511,7 @@ RULES:
                 eventTriggered = true;
                 eventName    = 'Cold Engine Warning';
                 eventType    = 'WARNING';
-                eventDetails = `RPM ${telemetry.rpm} at ${telemetry.coolantTemp}°C`;
+                eventDetails = `Engine revving high while cold — let it warm up first`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
@@ -9450,7 +9521,7 @@ RULES:
                 eventTriggered = true;
                 eventName    = 'Engine Strain';
                 eventType    = 'WARNING';
-                eventDetails = `Load ${telemetry.engineLoad}% at ${telemetry.rpm} RPM`;
+                eventDetails = `Engine struggling in low gear — downshift to protect it`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
@@ -9466,7 +9537,7 @@ RULES:
                         eventTriggered = true;
                         eventName    = 'Long Idle';
                         eventType    = 'INFO';
-                        eventDetails = `${Math.floor(idleDuration)} seconds`;
+                        eventDetails = `Vehicle idling for over 3 minutes — turn off to save fuel`;
                         logDriverEvent(driver, eventName, eventType, eventDetails);
                     }
                 }
@@ -9480,7 +9551,7 @@ RULES:
                 eventTriggered = true;
                 eventName    = 'Over Speed Limit';
                 eventType    = 'CRITICAL';
-                eventDetails = `${telemetry.speed} km/h`;
+                eventDetails = `Driving too fast — slow down to stay safe`;
                 logDriverEvent(driver, eventName, eventType, eventDetails);
             }
 
@@ -9494,6 +9565,7 @@ RULES:
 
             // Calculate safety score
             b.safetyScore = calculateSafetyScore(b.events);
+            updateWeeklyScores(driver);
 
             // Update current event
             if (eventTriggered) {
@@ -9505,9 +9577,9 @@ RULES:
                                      : eventType === 'WARNING'  ? 'behavior'
                                      : 'info';
                     const metricVal = eventType === 'CRITICAL'
-                        ? `${b.liveMetrics.speed} km/h`
-                        : (b.liveMetrics.rpm > 0 ? `RPM ${b.liveMetrics.rpm}` : `${b.liveMetrics.speed} km/h`);
-                    const toastDuration = eventType === 'CRITICAL' ? 10000 : 7000;
+                        ? `Speeding at ${b.liveMetrics.speed} km/h`
+                        : (b.liveMetrics.rpm > 0 ? `High revs at ${b.liveMetrics.rpm} RPM` : `Moving at ${b.liveMetrics.speed} km/h`);
+                    const toastDuration = eventType === 'CRITICAL' ? 15000 : 12000;
 
                     const toastId = showAlert(toastStyle, `${driver.name}: ${eventName}`,
                         eventDetails || `${eventName} detected (${metricVal})`,
@@ -9680,12 +9752,29 @@ RULES:
                             : severity === 'INFO'     ? 'INFO'
                             : 'WARNING';
 
-            const details = `Speed: ${payload.speed ?? '--'} km/h  RPM: ${payload.rpm ?? '--'}  Throttle: ${payload.throttle ?? '--'}%`;
+            const eventNameLower = (payload.event_type || '').toLowerCase();
+            let details;
+            if (eventNameLower.includes('brake') || eventNameLower.includes('decelerat')) {
+                details = 'Sudden hard braking — driver slammed the brakes';
+            } else if (eventNameLower.includes('acceler') || eventNameLower.includes('launch') || eventNameLower.includes('throttle')) {
+                details = 'Aggressive acceleration from a stop — ease off the gas';
+            } else if (eventNameLower.includes('cold') || eventNameLower.includes('warm')) {
+                details = 'Engine revving high while cold — let it warm up first';
+            } else if (eventNameLower.includes('lug') || eventNameLower.includes('strain') || eventNameLower.includes('load')) {
+                details = 'Engine struggling in low gear — downshift to protect it';
+            } else if (eventNameLower.includes('idle')) {
+                details = 'Vehicle idling for too long — turn off to save fuel';
+            } else if (eventNameLower.includes('speed')) {
+                details = 'Driving too fast — slow down to stay safe';
+            } else {
+                details = `${payload.event_type || 'Alert'} detected — check on the driver`;
+            }
 
             // 1. Update driver page
             if (driver.behavior) {
                 driver.behavior.safetyScore = score;
                 driver.behavior.currentEvent = eventName;
+                updateWeeklyScores(driver);
             }
             logDriverEvent(driver, eventName, eventType, details);
 
@@ -9762,6 +9851,31 @@ Time: ${ts}`.trim();
             score -= (events.excessiveIdling || 0) * 2;
             score -= (events.speeding || 0) * 6;
             return Math.max(0, Math.min(100, score));
+        }
+
+        /**
+         * Rotate weekly safety scores when day changes.
+         * Stores scores for last 7 days; last element = today.
+         */
+        function updateWeeklyScores(driver) {
+            if (!driver || !driver.behavior) return;
+            const b = driver.behavior;
+            if (!b.weeklyScores || b.weeklyScores.length !== 7) {
+                b.weeklyScores = [100, 100, 100, 100, 100, 100, b.safetyScore || 100];
+            }
+            const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            if (!b._lastScoreDate) {
+                b._lastScoreDate = today;
+            }
+            if (b._lastScoreDate !== today) {
+                // New day: shift left, push yesterday's final score
+                const prevScore = b.weeklyScores[6];
+                b.weeklyScores.shift();
+                b.weeklyScores.push(prevScore);
+                b._lastScoreDate = today;
+            }
+            // Always update today's slot with current score
+            b.weeklyScores[6] = b.safetyScore || 100;
         }
 
         /**
@@ -10018,8 +10132,7 @@ Time: ${ts}`.trim();
     
     <!-- Global Toast Container — top-center stack -->
     <div id="alert-container"
-         class="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none flex flex-col gap-2 items-center"
-         style="max-width:min(380px,92vw);width:100%">
+         class="pointer-events-none">
     </div>
     <!-- Add/Edit Driver Modal -->
     <div id="driver-modal" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">

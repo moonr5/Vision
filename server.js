@@ -100,6 +100,8 @@ function connectToHiveMQ() {
         try { payload = JSON.parse(message.toString()); }
         catch { console.warn('[MQTT] Non-JSON message ignored'); return; }
 
+        console.log('[MQTT DATA]', topic, JSON.stringify(payload));
+
         // Buffered (SD card) records are forwarded to the browser for display
         // in the Analyze page but must NOT be written to the live telemetry table —
         // they are historical readings with their own original_timestamp.
