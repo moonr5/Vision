@@ -3066,6 +3066,16 @@
         let speedCount = 0;
         let startTime = Date.now();
         let chartInstance = null;
+
+        // ── Smart Trip Duration ───────────────────────────────────────────────
+        // Tracks actual engine-on / moving time instead of raw page-load time.
+        let latestRpm = 0;
+        let latestSpeed = 0;
+        let tripEngineSeconds = 0;      // Cumulative engine-on seconds
+        let tripEngineLastCheck = 0;    // Last tick timestamp (ms)
+        let tripEngineOffSince = 0;     // Timestamp when engine went off
+        const ENGINE_IDLE_RPM = 400;    // Below this = engine off
+        const TRIP_AUTO_RESET_MINUTES = 30; // Auto-reset after 30 min engine-off
         let eventCounts = { info: 0, warning: 0, critical: 0 };
 
         // --- SESSION STATE PERSISTENCE ---
@@ -3116,6 +3126,12 @@
                         activeGeofenceName: activeGeofence ? (activeGeofence.name || null) : null,
                     },
                     lastPeriodicInfoTime,
+                    trip: {
+                        engineSeconds: tripEngineSeconds,
+                        offSince: tripEngineOffSince,
+                        latestRpm,
+                        latestSpeed,
+                    },
                 };
                 localStorage.setItem(SESSION_STATE_KEY, JSON.stringify(state));
             } catch (e) {
@@ -3198,6 +3214,14 @@
                 // Restore geofence
                 if (state.geofence) {
                     isInsideZone = state.geofence.isInsideZone ?? true;
+                }
+
+                // Restore smart trip duration state
+                if (state.trip) {
+                    tripEngineSeconds = state.trip.engineSeconds ?? 0;
+                    tripEngineOffSince = state.trip.offSince ?? 0;
+                    latestRpm = state.trip.latestRpm ?? 0;
+                    latestSpeed = state.trip.latestSpeed ?? 0;
                 }
 
                 return true;
@@ -3367,6 +3391,9 @@
             archiveCurrentTrip();
             clearMapHistory();
             startTime = Date.now();
+            tripEngineSeconds = 0;
+            tripEngineLastCheck = 0;
+            tripEngineOffSince = 0;
             saveMapHistory();
             logReport('INFO', 'New Trip Started', 'Trip session reset — fresh tracking active', 0);
             console.log('[MapHistory] Session reset');
@@ -5158,6 +5185,10 @@
 
                     device_id: payload.device_id ?? 'device-01'
                 };
+
+                // Capture latest OBD values for smart trip duration
+                if (typeof data.rpm === 'number' && data.rpm >= 0) latestRpm = data.rpm;
+                latestSpeed = data.speed || 0;
                 
                 // Update sensor states for report logging
                 updateSensorStatesForReport(data);
@@ -5837,10 +5868,43 @@
         }
 
         function updateDuration() {
-            const diff = Date.now() - startTime;
-            const hrs = Math.floor(diff / 3600000);
-            const mins = Math.floor((diff % 3600000) / 60000);
-            const secs = Math.floor((diff % 60000) / 1000);
+            const now = Date.now();
+
+            // If no data for 30 s, assume vehicle is disconnected / engine off
+            if (now - lastDataTime > 30000) {
+                latestRpm = 0;
+                latestSpeed = 0;
+            }
+
+            // Prevent huge jumps after page refresh or tab sleep
+            if (tripEngineLastCheck > 0 && now - tripEngineLastCheck > 10000) {
+                tripEngineLastCheck = now;
+            }
+
+            const engineRunning = latestRpm > ENGINE_IDLE_RPM || latestSpeed > 0;
+
+            if (engineRunning) {
+                if (tripEngineLastCheck > 0) {
+                    tripEngineSeconds += (now - tripEngineLastCheck) / 1000;
+                }
+                tripEngineOffSince = 0;
+            } else {
+                if (tripEngineOffSince === 0) {
+                    tripEngineOffSince = now;
+                } else {
+                    const offMinutes = (now - tripEngineOffSince) / 1000 / 60;
+                    if (offMinutes >= TRIP_AUTO_RESET_MINUTES) {
+                        tripEngineSeconds = 0;
+                        tripEngineOffSince = 0;
+                    }
+                }
+            }
+
+            tripEngineLastCheck = now;
+
+            const hrs = Math.floor(tripEngineSeconds / 3600);
+            const mins = Math.floor((tripEngineSeconds % 3600) / 60);
+            const secs = Math.floor(tripEngineSeconds % 60);
             kpiTime.innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
         }
 
