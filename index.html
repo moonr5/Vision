@@ -5148,6 +5148,9 @@
                     engine_load: payload.obd?.engine_load ?? payload.engine_load ?? '--',
                     throttle: payload.obd?.throttle ?? payload.throttle ?? 0,
                     coolant_temp: payload.obd?.coolant_temp ?? payload.coolant_temp ?? 0,
+                    fuel_level: payload.fuel_level ?? payload.obd?.fuel_level ?? payload.fuel?.level_percent ?? null,
+                    speed_obd: payload.speed_obd ?? payload.obd?.speed ?? null,
+                    mil: payload.mil ?? payload.obd?.mil ?? false,
 
                     // Sensors
                     s1: payload.s1 ?? 0,
