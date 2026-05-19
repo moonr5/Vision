@@ -3174,13 +3174,9 @@
                     state.techAlerts.forEach(a => _techAlerts.push(a));
                 }
 
-                // Restore sensor states
-                if (state.sensorStates) {
-                    latestSensorStates = state.sensorStates;
-                }
-                if (state.sensors) {
-                    sensors = state.sensors;
-                }
+                // NOTE: We intentionally do NOT restore sensor states from session storage.
+                // Sensors should default to normal (green) until live device data arrives.
+                // This prevents stale "red" indicators when no device is connected.
 
                 // Restore counters
                 messageCount = state.messageCount ?? 0;
@@ -3432,13 +3428,9 @@
                 }
             }
 
-            // Restore sensor LEDs
-            updateSensorUI('s1', sensors.s1);
-            updateSensorUI('s2', sensors.s2);
-            updateSensorUI('s3', sensors.s3);
-            updateSensorUI('s4', sensors.s4);
-            updateSensorUI('mag1', sensors.mag1);
-            updateSensorUI('mag2', sensors.mag2);
+            // Sensor LEDs are NOT restored from session — they default to normal/green
+            // until live device data actually arrives. This avoids stale red indicators
+            // when no vehicle is currently connected.
 
             // Restore trace button state
             const traceBtn = document.getElementById('btn-trace');
