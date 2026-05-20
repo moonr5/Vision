@@ -2298,9 +2298,29 @@
                         <span class="text-[9px] text-gray-400 font-medium uppercase mb-0.5">Coolant</span>
                         <span id="obd-temp" class="font-mono text-sm font-bold text-gray-800">--°C</span>
                     </div>
-                    <div class="bg-gray-50 px-2.5 py-2 rounded-lg flex flex-col items-start justify-between min-h-[56px]">
-                        <span class="text-[9px] text-gray-400 font-medium uppercase mb-0.5">Fuel Level</span>
-                        <span id="fuel-level" class="font-mono text-sm font-bold text-gray-800">--%</span>
+                    <!-- Fuel Level Gauge -->
+                    <div class="bg-gray-50 px-2 py-2 rounded-lg flex flex-col items-center justify-between relative overflow-hidden border border-gray-100">
+                        <span class="text-[9px] text-gray-400 font-medium uppercase">Fuel Level</span>
+                        <div class="relative w-16 h-9 mt-0.5">
+                            <svg class="w-full h-full overflow-visible" viewBox="0 0 100 55">
+                                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/>
+                                <path id="fuel-gauge-arc" d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="url(#fuelGradient)" stroke-width="10" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="125.66"/>
+                                <defs>
+                                    <linearGradient id="fuelGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#ef4444"/>
+                                        <stop offset="35%" stop-color="#eab308"/>
+                                        <stop offset="100%" stop-color="#22c55e"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="absolute inset-0 flex items-end justify-center pb-0.5">
+                                <span class="material-symbols-outlined text-gray-400 text-xs">local_gas_station</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center -mt-0.5">
+                            <span id="fuel-gauge-value" class="text-sm font-bold text-gray-800 font-mono leading-none">--%</span>
+                            <span id="fuel-gauge-status" class="text-[9px] font-medium text-gray-400">--</span>
+                        </div>
                     </div>
                     <div class="bg-gray-50 px-2.5 py-2 rounded-lg flex flex-col items-start justify-between min-h-[56px]">
                         <span class="text-[9px] text-gray-400 font-medium uppercase mb-0.5">Integrity</span>
@@ -5686,9 +5706,8 @@
             }
 
             // Fuel Analytics
-            const fuelLevel = document.getElementById('fuel-level');
             const fuelValue = data.fuel_level ?? data.fuel?.level_percent ?? '--';
-            if (fuelLevel) fuelLevel.innerText = fuelValue + '%';
+            updateFuelGauge(fuelValue);
             
             // Fuel Flow (if available)
             const fuelIn = document.getElementById('fuel-in');
@@ -5906,6 +5925,36 @@
             const mins = Math.floor((tripEngineSeconds % 3600) / 60);
             const secs = Math.floor(tripEngineSeconds % 60);
             kpiTime.innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+
+        // ── Fuel Level Gauge Update ───────────────────────────────────────────
+        function updateFuelGauge(value) {
+            const arc = document.getElementById('fuel-gauge-arc');
+            const valEl = document.getElementById('fuel-gauge-value');
+            const statusEl = document.getElementById('fuel-gauge-status');
+
+            let pct = parseFloat(value);
+            if (isNaN(pct) || pct < 0) pct = 0;
+            if (pct > 100) pct = 100;
+
+            const maxArc = 125.66; // π × 40 (semi-circle arc length)
+            const offset = maxArc - (maxArc * pct / 100);
+            if (arc) arc.style.strokeDashoffset = offset;
+
+            if (valEl) valEl.innerText = pct.toFixed(0) + '%';
+
+            if (statusEl) {
+                if (pct <= 20) {
+                    statusEl.innerText = 'Critical';
+                    statusEl.className = 'text-[9px] font-medium mt-0.5 text-red-500';
+                } else if (pct <= 50) {
+                    statusEl.innerText = 'Low';
+                    statusEl.className = 'text-[9px] font-medium mt-0.5 text-yellow-600';
+                } else {
+                    statusEl.innerText = 'Good';
+                    statusEl.className = 'text-[9px] font-medium mt-0.5 text-green-600';
+                }
+            }
         }
 
         function initChart() {
