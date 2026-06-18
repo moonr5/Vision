@@ -5,6 +5,12 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const mqtt = require('mqtt');
 
+// ── Integration connector (route_engine + scale_engine bridges) ──────────
+const connector = (() => {
+    try { return require('./integration/connector'); }
+    catch (e) { console.warn('[Server] Integration connector not found — advanced engines disabled'); return null; }
+})();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const PYTHON_AI_URL = process.env.PYTHON_AI_URL || null;
@@ -111,6 +117,11 @@ function connectToHiveMQ() {
 
         // Push to all connected dashboard SSE clients (frontend handles routing)
         broadcastSSE({ type: 'telemetry', topic, data: payload });
+
+        // Forward to scale engine stream bus (fire-and-forget — never blocks MQTT)
+        if (connector && payload.type !== 'buffered') {
+            connector.forwardTelemetryToScaleEngine(payload, topic);
+        }
     });
 
     client.on('error',      err => console.error('[MQTT] Error:', err.message));
@@ -204,16 +215,116 @@ app.post('/api/ai/analyze', async (req, res) => {
 
 app.get('/health', async (req, res) => {
     const dbOk = pool ? await pool.query('SELECT 1').then(() => true).catch(() => false) : false;
+
+    // Check upstream engine health (non-blocking — returns quickly even if engines are down)
+    let routeEngine = null;
+    let scaleEngine = null;
+    if (connector) {
+        try {
+            routeEngine = await connector.upstreamFetch(
+                connector.ROUTE_ENGINE_URL, '/health', { timeout: 2000 }
+            );
+        } catch {}
+        try {
+            scaleEngine = await connector.upstreamFetch(
+                connector.SCALE_ENGINE_URL, '/health', { timeout: 2000 }
+            );
+        } catch {}
+    }
+
     res.json({
         status: 'ok',
         db: pool ? (dbOk ? 'connected' : 'error') : 'not configured',
         mqtt_topic: MQTT_TOPIC,
         sse_clients: sseClients.size,
+        engines: {
+            ai_backend: PYTHON_AI_URL ? (connector ? (await connector.upstreamFetch(PYTHON_AI_URL, '/health', { timeout: 2000 }).catch(() => null)) : null) : 'not configured',
+            route_engine: ROUTE_ENGINE_URL ? (routeEngine || 'unreachable') : 'not configured',
+            scale_engine: SCALE_ENGINE_URL ? (scaleEngine || 'unreachable') : 'not configured',
+        },
         timestamp: new Date().toISOString(),
     });
 });
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+
+// ─── Route Engine proxy (AI-driven route optimization + behaviour analysis) ───
+
+app.post('/api/route/analyze',      (req, res) => connector?.proxyToRouteEngine(req, res, '/api/route/analyze'));
+app.post('/api/route/compare',      (req, res) => connector?.proxyToRouteEngine(req, res, '/api/route/compare'));
+app.post('/api/route/driver-match', (req, res) => connector?.proxyToRouteEngine(req, res, '/api/route/driver-match'));
+app.post('/api/route/report',       (req, res) => connector?.proxyToRouteEngine(req, res, '/api/route/report'));
+app.get('/api/route/driver/:id',    (req, res) => connector?.proxyGetToRouteEngine(req, res, `/api/route/driver/${req.params.id}`));
+app.get('/api/route/drivers',       (req, res) => connector?.proxyGetToRouteEngine(req, res, '/api/route/drivers'));
+
+// ─── Scale Engine proxy (28-engine intelligence platform) ────────────────────
+
+// Data ingestion
+app.post('/api/stream/publish',       (req, res) => connector?.proxyToScaleEngine(req, res, '/api/stream/publish'));
+app.get('/api/stream/stats',          (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/stream/stats'));
+app.get('/api/timeseries/device/:id', (req, res) => connector?.proxyGetToScaleEngine(req, res, `/api/timeseries/device/${req.params.id}?${new URLSearchParams(req.query)}`));
+app.get('/api/timeseries/fleet',      (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/timeseries/fleet'));
+app.get('/api/storage/stats',         (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/storage/stats'));
+app.post('/api/schema/validate',     (req, res) => connector?.proxyToScaleEngine(req, res, '/api/schema/validate'));
+app.get('/api/schema/violations',    (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/schema/violations'));
+app.post('/api/normalize',           (req, res) => connector?.proxyToScaleEngine(req, res, '/api/normalize'));
+app.post('/api/geo/point-in-fence',  (req, res) => connector?.proxyToScaleEngine(req, res, '/api/geo/point-in-fence'));
+app.post('/api/geo/corridor',        (req, res) => connector?.proxyToScaleEngine(req, res, '/api/geo/corridor'));
+app.get('/api/fleet/state',          (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/fleet/state'));
+app.get('/api/fleet/state/device/:id',(req,res) => connector?.proxyGetToScaleEngine(req, res, `/api/fleet/state/device/${req.params.id}`));
+app.get('/api/quality/check',        (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/quality/check'));
+app.get('/api/quality/device/:id',   (req, res) => connector?.proxyGetToScaleEngine(req, res, `/api/quality/device/${req.params.id}`));
+app.get('/api/quality/fleet',        (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/quality/fleet'));
+app.post('/api/replay/start',        (req, res) => connector?.proxyToScaleEngine(req, res, '/api/replay/start'));
+app.get('/api/replay/status',        (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/replay/status'));
+
+// Smart systems
+app.post('/api/cep/ingest',          (req, res) => connector?.proxyToScaleEngine(req, res, '/api/cep/ingest'));
+app.get('/api/cep/alerts',           (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/cep/alerts'));
+app.post('/api/anomaly/detect',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/anomaly/detect'));
+app.get('/api/anomaly/baseline/:id', (req, res) => connector?.proxyGetToScaleEngine(req, res, `/api/anomaly/baseline/${req.params.id}`));
+app.post('/api/twin/update',         (req, res) => connector?.proxyToScaleEngine(req, res, '/api/twin/update'));
+app.get('/api/twin/:device_id',      (req, res) => connector?.proxyGetToScaleEngine(req, res, `/api/twin/${req.params.device_id}`));
+app.get('/api/twin/fleet',           (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/twin/fleet'));
+app.post('/api/maintenance/predict', (req, res) => connector?.proxyToScaleEngine(req, res, '/api/maintenance/predict'));
+app.get('/api/maintenance/fleet',    (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/maintenance/fleet'));
+app.post('/api/behavior/score',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/behavior/score'));
+app.get('/api/behavior/compare/:id', (req, res) => connector?.proxyGetToScaleEngine(req, res, `/api/behavior/compare/${req.params.id}`));
+app.post('/api/eta/compute',         (req, res) => connector?.proxyToScaleEngine(req, res, '/api/eta/compute'));
+app.post('/api/optimize/driver-match',(req,res)=> connector?.proxyToScaleEngine(req, res, '/api/optimize/driver-match'));
+app.post('/api/optimize/load-balance',(req,res)=> connector?.proxyToScaleEngine(req, res, '/api/optimize/load-balance'));
+app.get('/api/optimize/kpis',        (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/optimize/kpis'));
+app.post('/api/fusion/ingest',       (req, res) => connector?.proxyToScaleEngine(req, res, '/api/fusion/ingest'));
+app.get('/api/fusion/decisions',     (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/fusion/decisions'));
+
+// AI/ML
+app.post('/api/features/compute',     (req, res) => connector?.proxyToScaleEngine(req, res, '/api/features/compute'));
+app.get('/api/features/:type/:id',   (req, res) => connector?.proxyGetToScaleEngine(req, res, `/api/features/${req.params.type}/${req.params.id}`));
+app.post('/api/rag/index',           (req, res) => connector?.proxyToScaleEngine(req, res, '/api/rag/index'));
+app.post('/api/rag/search',          (req, res) => connector?.proxyToScaleEngine(req, res, '/api/rag/search'));
+app.post('/api/models/train',        (req, res) => connector?.proxyToScaleEngine(req, res, '/api/models/train'));
+app.post('/api/models/predict',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/models/predict'));
+app.get('/api/models/list',          (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/models/list'));
+app.get('/api/mlops/drift',          (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/mlops/drift'));
+app.post('/api/mlops/rollback',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/mlops/rollback'));
+app.post('/api/orchestrator/run',    (req, res) => connector?.proxyToScaleEngine(req, res, '/api/orchestrator/run'));
+app.post('/api/forecast/fuel',       (req, res) => connector?.proxyToScaleEngine(req, res, '/api/forecast/fuel'));
+app.post('/api/forecast/delay',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/forecast/delay'));
+app.post('/api/graph/add-node',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/graph/add-node'));
+app.get('/api/graph/related',        (req, res) => connector?.proxyGetToScaleEngine(req, res, '/api/graph/related'));
+
+// Edge-cloud bridge
+app.post('/api/edge/models/create',  (req, res) => connector?.proxyToScaleEngine(req, res, '/api/edge/models/create'));
+app.post('/api/edge/models/rollout', (req, res) => connector?.proxyToScaleEngine(req, res, '/api/edge/models/rollout'));
+app.post('/api/edge/models/confirm', (req, res) => connector?.proxyToScaleEngine(req, res, '/api/edge/models/confirm'));
+app.post('/api/sync/push-to-edge',   (req, res) => connector?.proxyToScaleEngine(req, res, '/api/sync/push-to-edge'));
+app.post('/api/sync/ingest-from-edge',(req,res)=> connector?.proxyToScaleEngine(req, res, '/api/sync/ingest-from-edge'));
+app.post('/api/fl/start-round',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/fl/start-round'));
+app.post('/api/fl/submit-update',    (req, res) => connector?.proxyToScaleEngine(req, res, '/api/fl/submit-update'));
+app.post('/api/fl/aggregate',        (req, res) => connector?.proxyToScaleEngine(req, res, '/api/fl/aggregate'));
+
+// System analyzer
+app.post('/api/system/analyze',      (req, res) => connector?.proxyToScaleEngine(req, res, '/api/system/analyze'));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 

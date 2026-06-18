@@ -18,6 +18,8 @@ This database module provides:
 
 ## Architecture
 
+> **System diagram:** See [`Code Architecture.drawio`](../Code%20Architecture.drawio) at the repo root for the full high-level integration map (open in [draw.io](https://app.diagrams.net/)).
+
 ```
 database/
 ├── schema.sql        -- Database schema definition

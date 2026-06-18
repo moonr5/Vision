@@ -1,0 +1,12 @@
+node_modules/
+package-lock.json
+index.html
+login.html
+*.ino
+*.drawio
+*.md
+scale_engine/
+route_engine/
+ai_backend/
+__pycache__/
+coverage/
