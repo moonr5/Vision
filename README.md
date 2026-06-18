@@ -8,7 +8,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?logo=postgresql)](https://postgresql.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express)](https://expressjs.com/)
-[![License](https://img.shields.io/badge/License-LGPLv3-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-SGU%20Source%20Available%20v1.0-blue.svg)](LICENSE)
 
 ---
 
@@ -866,10 +866,19 @@ This project was developed as a university capstone thesis, demonstrating compet
 
 ## License
 
-SGU Logistics & Telemetry Dashboard is published under the **GNU Lesser General
-Public License, Version 3** (LGPLv3). See [LICENSE](LICENSE) for the full
-license text and [COPYRIGHT](COPYRIGHT) for copyright and third-party
-attribution information.
+This project is released under the **SGU Logistics Source Available License v1.0**
+— a custom license written specifically for this system.
+
+| Permission | Status |
+|------------|--------|
+| Academic use (research, coursework, thesis) | Permitted |
+| Personal / hobbyist use | Permitted |
+| Modification and redistribution (non-commercial) | Permitted with attribution |
+| Commercial use (SaaS, managed services, paid products) | Requires separate agreement |
+| Patent grant | Not included (negotiable for commercial) |
+
+See [LICENSE](LICENSE) for the complete terms and [COPYRIGHT](COPYRIGHT) for
+third-party attribution.
 
 ---
 

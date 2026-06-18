@@ -77,6 +77,6 @@ existing code:
 ## License
 
 By contributing, you agree that your contributions will be licensed under
-the GNU Lesser General Public License v3.0 (LGPLv3).
+the SGU Logistics Source Available License v1.0.
 
 See [LICENSE](LICENSE) and [COPYRIGHT](COPYRIGHT) for full terms.
