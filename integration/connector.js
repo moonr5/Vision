@@ -1,5 +1,6 @@
 /**
  * SGU Logistics — Integration Connector
+ * Made by Monzer · github.com/moonr5/Vision
  *
  * Bridges the existing Node.js backend (server.js) with the new backend engines
  * (route_engine and scale_engine) through HTTP API calls.

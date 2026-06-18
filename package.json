@@ -2,6 +2,7 @@
   "name": "sgu-logistics",
   "version": "1.0.0",
   "description": "SGU Logistics & Telemetry Dashboard",
+  "author": "Monzer · github.com/moonr5/Vision",
   "main": "server.js",
   "engines": {
     "node": ">=18.0.0"

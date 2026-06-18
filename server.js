@@ -1,3 +1,7 @@
+// =============================================================================
+//  SGU Logistics & Telemetry Dashboard — Application Server
+//  Made by Monzer · github.com/moonr5/Vision
+// =============================================================================
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -138,6 +142,10 @@ function broadcastSSE(payload) {
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
+app.use((req, res, next) => {
+    res.setHeader('X-Creator', 'Made by Monzer · github.com/moonr5/Vision');
+    next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
@@ -331,7 +339,14 @@ app.post('/api/system/analyze',      (req, res) => connector?.proxyToScaleEngine
 async function start() {
     await runMigrations();
     connectToHiveMQ();
-    app.listen(PORT, () => console.log(`[Server] Running on port ${PORT}`));
+    app.listen(PORT, () => {
+        console.log('');
+        console.log('╔══════════════════════════════════════════════════════════╗');
+        console.log('║  SGU Logistics & Telemetry Dashboard                   ║');
+        console.log('║  Made by Monzer · github.com/moonr5/Vision             ║');
+        console.log('╚══════════════════════════════════════════════════════════╝');
+        console.log(`[Server] Running on port ${PORT}`);
+    });
 }
 
 start();

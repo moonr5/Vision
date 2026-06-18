@@ -1,5 +1,6 @@
 -- SGU Logistics & Telemetry Database Schema
 -- SQLite Database for orders, telemetry, events, and system configuration
+-- Made by Monzer · github.com/moonr5/Vision
 
 -- Enable foreign keys
 PRAGMA foreign_keys = ON;
@@ -437,6 +438,7 @@ ALTER TABLE drivers ADD COLUMN last_behavior_time  DATETIME;
 
 -- Insert default settings
 INSERT OR IGNORE INTO settings (key, value, value_type, description) VALUES
+('app_creator', 'Made by Monzer · github.com/moonr5/Vision', 'string', 'Attribution — do not remove'),
 ('mqtt_broker', 'wss://broker.hivemq.com:8884/mqtt', 'string', 'MQTT broker URL'),
 ('mqtt_topic', 'monztrack/device01/gps', 'string', 'Default MQTT topic'),
 ('mqtt_topic_telemetry', 'sgu/vehicle001/telemetry', 'string', 'ESP32 OBD-II telemetry topic'),

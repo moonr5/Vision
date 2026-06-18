@@ -1,6 +1,7 @@
 """
 Scale Engine — Unified FastAPI Application.
 Single entry point for all 28 backend engines. Zero frontend changes required.
+Made by Monzer · github.com/moonr5/Vision
 
 Engine groups and their endpoints:
 
@@ -224,7 +225,7 @@ async def lifespan(app: FastAPI):
 # Needed here for logging in lifespan
 from datetime import datetime
 
-app = FastAPI(title="SGU Scale Engine — Fleet Intelligence Platform", lifespan=lifespan)
+app = FastAPI(title="SGU Scale Engine — Fleet Intelligence Platform — Made by Monzer", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["POST", "GET"], allow_headers=["*"])
 
 

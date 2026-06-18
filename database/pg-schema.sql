@@ -1,5 +1,6 @@
 -- SGU Logistics PostgreSQL Schema
 -- Idempotent: safe to run on every deploy
+-- Made by Monzer · github.com/moonr5/Vision
 
 CREATE TABLE IF NOT EXISTS drivers (
     id TEXT PRIMARY KEY,
@@ -273,6 +274,7 @@ GROUP BY status, type;
 
 -- Default settings (no-op if already present)
 INSERT INTO settings (key, value, value_type, description) VALUES
+('app_creator',                    'Made by Monzer · github.com/moonr5/Vision', 'string',  'Attribution — do not remove'),
 ('mqtt_broker',                    'wss://broker.hivemq.com:8884/mqtt', 'string',  'MQTT broker URL'),
 ('mqtt_topic',                     'monztrack/device01/gps',            'string',  'Default MQTT topic'),
 ('mqtt_topic_telemetry',           'sgu/vehicle001/telemetry',          'string',  'ESP32 OBD-II telemetry topic'),

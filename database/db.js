@@ -1,6 +1,7 @@
 /**
  * SGU Logistics Database Module
- * 
+ * Made by Monzer · github.com/moonr5/Vision
+ *
  * Uses sql.js (SQLite compiled to WebAssembly) for in-browser relational database.
  * This provides persistent storage via IndexedDB-backed files or exportable blobs.
  * 

@@ -1,3 +1,5 @@
+# AI Backend — Fleet analysis, Gemini integration, and Telegram bot.
+# Made by Monzer · github.com/moonr5/Vision
 import os
 from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any
@@ -45,7 +47,7 @@ async def lifespan(app: FastAPI):
     await db.close_pool()
 
 
-app = FastAPI(title="SGU Fleet AI Backend", lifespan=lifespan)
+app = FastAPI(title="SGU Fleet AI Backend — Made by Monzer", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

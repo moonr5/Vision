@@ -1,6 +1,7 @@
 /**
  * ============================================================
  *  MonzTrack OBD2 ESP32 Firmware — v2.0 (CORRECTED)
+ *  Made by Monzer · github.com/moonr5/Vision
  * ============================================================
  *
  *  Fixes applied vs v1:
@@ -183,6 +184,7 @@ void setup() {
     Serial.begin(115200);
     delay(500);
     Serial.println("\n[SYSTEM] MonzTrack OBD2 v2.0 starting...");
+    Serial.println("[SYSTEM] Made by Monzer · github.com/moonr5/Vision");
 
     // Configure sensor input pins
     if (PIN_S1   >= 0) pinMode(PIN_S1,   INPUT_PULLUP);

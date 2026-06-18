@@ -2,6 +2,7 @@
 Route Engine — FastAPI application.
 Backend microservice for AI-driven route optimization, behaviour-aware
 driver-route pairing, and comprehensive fleet reporting.
+Made by Monzer · github.com/moonr5/Vision
 
 Endpoints:
   POST /api/route/analyze       — Score multiple route candidates for a driver
@@ -53,7 +54,7 @@ async def lifespan(app: FastAPI):
     await db.close_pool()
 
 
-app = FastAPI(title="SGU Route Optimization Engine", lifespan=lifespan)
+app = FastAPI(title="SGU Route Optimization Engine — Made by Monzer", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
