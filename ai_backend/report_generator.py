@@ -86,7 +86,7 @@ REPORT_TEMPLATE = """
   <div class="meta">
     Generated: {{ generated_at }}<br>
     Period: Last 7 days<br>
-    Powered by Claude AI
+    SGU Logistics & Telemetry Dashboard
   </div>
 </div>
 
