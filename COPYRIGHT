@@ -1,0 +1,27 @@
+Copyright (c) 2025 moonr5
+
+This project is licensed under the GNU Lesser General Public License version 3
+(LGPLv3). See the LICENSE file in the root of this repository for the full
+license text.
+
+Some components of this project incorporate or are derived from third-party
+works. Where applicable, the original copyright and license notices are
+retained in the respective source files.
+
+Third-party libraries used by this project include:
+
+  - Express.js (MIT)           — https://expressjs.com/
+  - MQTT.js (MIT)              — https://github.com/mqttjs/MQTT.js
+  - node-postgres (MIT)        — https://node-postgres.com/
+  - FastAPI (MIT)              — https://fastapi.tiangolo.com/
+  - Google Generative AI SDK   — https://ai.google.dev/
+  - python-telegram-bot (LGPLv3) — https://python-telegram-bot.org/
+  - Leaflet.js (BSD-2-Clause)  — https://leafletjs.com/
+  - Chart.js (MIT)             — https://www.chartjs.org/
+  - sql.js (MIT)               — https://sql.js.org/
+  - jsPDF (MIT)                — https://github.com/parallax/jsPDF
+  - Turf.js (MIT)              — https://turfjs.org/
+  - Jest (MIT)                 — https://jestjs.io/
+
+For full license terms of each dependency, refer to the respective project
+websites or the node_modules and Python site-packages directories.
