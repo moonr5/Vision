@@ -1,6 +1,6 @@
-# 🚛 SGU Logistics & Telemetry Dashboard
+# SGU Logistics & Telemetry Dashboard
 
-> **Intelligent Fleet Management System** — Real-time vehicle monitoring, AI-powered analytics, and logistics optimization platform.
+> **Intelligent Fleet Management System** — Real-time vehicle telemetry, AI-powered analytics, and logistics optimization across a distributed four-layer architecture spanning embedded hardware, cloud microservices, and a browser-based command center.
 
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18-green?logo=node.js)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://python.org/)
@@ -9,456 +9,667 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express)](https://expressjs.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Thesis](https://img.shields.io/badge/Type-Thesis%20Project-purple)](.)
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
-- [🎯 Overview](#-overview)
-- [🏗️ Architecture](#️-architecture)
-- [🔄 Complete Data Flow](#-complete-data-flow)
-- [⚡ Key Innovations](#-key-innovations)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🧠 The 28 AI Engines](#-the-28-ai-engines)
-- [📦 Project Structure](#-project-structure)
-- [🚀 Getting Started](#-getting-started)
-- [🔌 API Reference](#-api-reference)
-- [🗄️ Database Schema](#️-database-schema)
-- [🧪 Testing](#-testing)
-- [🚢 Deployment](#-deployment)
-- [📚 Documentation Index](#-documentation-index)
-
----
-
-## 🎯 Overview
-
-**SGU Logistics & Telemetry** is a comprehensive fleet management platform that combines **IoT data collection**, **real-time telemetry processing**, **AI/ML analytics**, and a **modern web dashboard** into a single unified system.
-
-### What it does
-
-| Capability | Description |
-|------------|-------------|
-| 📡 **Real-time Vehicle Tracking** | GPS + OBD-II sensor data streamed via MQTT |
-| 🛡️ **Unsafe Driving Detection** | 7 behaviors detected on-device (Arduino C++) |
-| 🧠 **28 AI Engines** | Anomaly detection, predictive maintenance, route optimization, driver scoring |
-| 💬 **AI Chat (Gemini)** | Natural language fleet queries — "Show me the riskiest driver this week" |
-| 📱 **Telegram Alerts** | Instant notifications + on-demand PDF reports |
-| 🗺️ **Live Dashboard** | Interactive maps, charts, behavior scores, order tracking |
-| 💾 **Database-first AI** | 80% of questions answered from local SQLite (free), only complex queries use Gemini |
-
-### Scale
-
-- **100+ vehicles** supported concurrently
-- **2000+ data points/second** processing capacity
-- **85% cost reduction** vs. all-cloud AI approach (database-first architecture)
-- **4 independent services** deployable on free-tier Railway
+- [System Architecture](#system-architecture)
+- [Data Flow](#data-flow)
+- [Service Topology](#service-topology)
+- [Key Innovations](#key-innovations)
+- [Technology Stack](#technology-stack)
+- [The 28 AI Engines](#the-28-ai-engines)
+- [Project Structure](#project-structure)
+- [Database Design](#database-design)
+- [Getting Started](#getting-started)
+- [API Reference](#api-reference)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Documentation Index](#documentation-index)
+- [Academic Context](#academic-context)
 
 ---
 
-## 🏗️ Architecture
+## System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    🚗 HARDWARE / EDGE LAYER                      │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │ GPS Device   │  │ OBD-II       │  │ BehaviorAnalysis     │  │
-│  │ (ESP32)      │  │ Scanner      │  │ (C++ On-Device)      │  │
-│  │              │  │ (ESP32+CAN)  │  │ 7 Safety Checks      │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
-│         │                 │                      │              │
-└─────────┼─────────────────┼──────────────────────┼──────────────┘
-          │                 │                      │
-          └─────────────────┴──────────────────────┘
-                            │ MQTT (HiveMQ)
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  ⚙️ BACKEND CORE LAYER                           │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │  Node.js Express Server (server.js)                   │      │
-│  │  ├─ MQTT Subscriber (monztrack/device01/#)           │      │
-│  │  ├─ REST API (30+ endpoints)                         │      │
-│  │  ├─ SSE Live Streaming (GET /api/stream)             │      │
-│  │  └─ PostgreSQL Persistence                           │      │
-│  └──────────────────────────┬───────────────────────────┘      │
-│                             │                                   │
-│  ┌──────────────────────────┴───────────────────────────┐      │
-│  │  Integration Connector (integration/connector.js)     │      │
-│  │  ├─ Proxy to Route Engine  (port 8001)               │      │
-│  │  ├─ Proxy to Scale Engine  (port 8002)               │      │
-│  │  └─ Graceful degradation when offline                │      │
-│  └──────────────────────────┬───────────────────────────┘      │
-│                             │ HTTP                              │
-└─────────────────────────────┼───────────────────────────────────┘
-                              │
-┌─────────────────────────────┼───────────────────────────────────┐
-│              🧠 AI / INTELLIGENCE LAYER (Python)                 │
-│                                                                  │
-│  ┌───────────────────────┐  ┌───────────────────────────────┐  │
-│  │  Scale Engine (8002)  │  │  AI Backend (8000)             │  │
-│  │  ═══════════════════  │  │  ═══════════════════════════  │  │
-│  │  📥 Data Ingestion ×9 │  │  ├─ Gemini 2.0 Flash AI       │  │
-│  │  ⚙️ Smart Systems ×8  │  │  ├─ Telegram Bot              │  │
-│  │  🤖 AI/ML ×8          │  │  └─ PDF Report Generator      │  │
-│  │  ☁️ Edge/Cloud ×3     │  │                                │  │
-│  └───────────────────────┘  └───────────────────────────────┘  │
-│                                                                  │
-│  ┌───────────────────────────────────────────────────────┐      │
-│  │  Route Engine (8001)                                   │      │
-│  │  ├─ Route Scoring (Safety/Efficiency/Driver/History)  │      │
-│  │  ├─ Driver-to-Route Matching                          │      │
-│  │  └─ 4-Stage Report Pipeline                           │      │
-│  └───────────────────────────────────────────────────────┘      │
-│                                                                  │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────────┐
-│                   🖥️ PRESENTATION LAYER                          │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │  Web Dashboard (index.html)                           │      │
-│  │  ├─ 🗺️ Leaflet Real-time Map                         │      │
-│  │  ├─ 📊 Chart.js Telemetry Graphs                      │      │
-│  │  ├─ 🤖 AI Chat Interface                              │      │
-│  │  └─ 📱 Mobile-Responsive UI                           │      │
-│  ├──────────────────────────────────────────────────────┤      │
-│  │  Local SQLite Database (sql.js WASM)                  │      │
-│  │  ├─ Caches ~80-85% of queries (free)                 │      │
-│  │  ├─ Auto-saves to IndexedDB every 30s                │      │
-│  │  └─ Migrates legacy localStorage data                │      │
-│  ├──────────────────────────────────────────────────────┤      │
-│  │  Auth System (login.html/js/css)                      │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+The platform is organized into four independent layers, each capable of operating with graceful degradation when downstream services are unavailable.
+
+```mermaid
+flowchart TB
+    subgraph EDGE["HARDWARE / EDGE LAYER"]
+        direction LR
+        GPS["GPS Module<br/>ESP32"]
+        OBD["OBD-II Scanner<br/>ESP32 + MCP2515 CAN"]
+        BEH["BehaviorAnalysis<br/>C++ On-Device<br/>7 Safety Checks"]
+    end
+
+    subgraph CORE["BACKEND CORE LAYER"]
+        direction TB
+        SRV["Express Server<br/>server.js :3000"]
+        MQTT["MQTT Subscriber<br/>monztrack/device01/#"]
+        REST["REST API<br/>30+ Endpoints"]
+        SSE["SSE Stream<br/>GET /api/stream"]
+        PG[("PostgreSQL 15<br/>Persistent Storage")]
+        CONN["Integration Connector<br/>connector.js"]
+    end
+
+    subgraph AI["AI / INTELLIGENCE LAYER"]
+        direction LR
+        subgraph SC["Scale Engine :8002"]
+            DI["Data Ingestion ×9"]
+            SS["Smart Systems ×8"]
+            ML["AI / ML ×8"]
+            EC["Edge / Cloud ×3"]
+        end
+        subgraph RT["Route Engine :8001"]
+            RA["Route Analyzer"]
+            DM["Driver Matching"]
+            RP["Report Pipeline"]
+        end
+        subgraph AB["AI Backend :8000"]
+            GM["Gemini 2.0 Flash"]
+            TG["Telegram Bot"]
+            PDF["PDF Reports"]
+        end
+    end
+
+    subgraph PRES["PRESENTATION LAYER"]
+        direction TB
+        DASH["Web Dashboard<br/>Leaflet + Chart.js"]
+        SQLITE[("Browser SQLite<br/>sql.js WASM")]
+        AICHAT["AI Chat Interface"]
+        AUTH["Authentication"]
+    end
+
+    GPS -->|"MQTT"| MQTT
+    OBD -->|"MQTT"| MQTT
+    BEH -->|"Serial"| OBD
+
+    MQTT --> SRV
+    SRV --> PG
+    SRV --> SSE
+    SRV --> REST
+    SRV --> CONN
+
+    CONN -->|"HTTP"| SC
+    CONN -->|"HTTP"| RT
+    CONN -->|"HTTP"| AB
+
+    SSE --> DASH
+    REST --> DASH
+    DASH --> SQLITE
+    DASH --> AICHAT
+    DASH --> AUTH
+
+    GM --> TG
+    GM --> PDF
 ```
 
 ---
 
-## 🔄 Complete Data Flow
+## Data Flow
 
+End-to-end telemetry journey — sub-200ms from sensor silicon to dashboard pixel.
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant V as Vehicle Sensors<br/>(OBD-II, GPS, CAN)
+    participant ESP as ESP32 Microcontroller
+    participant MQTT as MQTT Broker<br/>(HiveMQ)
+    participant SRV as Node.js Server<br/>(server.js)
+    participant PG as PostgreSQL
+    participant SC as Scale Engine<br/>(28 Engines)
+    participant SSE as SSE Stream
+    participant UI as Dashboard<br/>(Browser)
+
+    loop Every 500ms
+        V->>ESP: Read RPM, throttle, coolant, speed, GPS
+        ESP->>ESP: BehaviorAnalysis.check()<br/>7 safety thresholds
+        ESP->>MQTT: Publish JSON payload<br/>topic: monztrack/device01/gps
+    end
+
+    MQTT->>SRV: Subscriber receives (~50ms)
+    SRV->>PG: INSERT telemetry (~20ms)
+    SRV->>SC: Forward via HTTP (fire-and-forget)
+
+    activate SC
+    SC->>SC: Stream Bus routing
+    SC->>SC: Normalize & validate schema
+    SC->>SC: CEP rule evaluation
+    SC->>SC: Anomaly detection
+    SC->>SC: Digital Twin update
+    SC->>SC: Behavior inference
+    deactivate SC
+
+    SRV->>SSE: Push to connected clients (~10ms)
+    SSE->>UI: Render update (~16ms)
+
+    Note over V,UI: Total latency: ~200ms sensor-to-screen
+
+    alt Alert triggered
+        SC->>SRV: POST /api/events
+        SRV->>UI: SSE event notification
+        SC->>SC: Telegram Bot send alert
+    end
 ```
-   VEHICLE                    SERVER                     AI ENGINES                DASHBOARD
-   ───────                    ──────                     ──────────                ─────────
 
-  OBD-II ──┐                                             ┌─ Stream Bus ──────────┐
-           │   MQTT         ┌──────────┐    REST API    │                       │
-  GPS ─────┼──(HiveMQ)─────→│ server.js│────────────────→├─ Anomaly Detector    │
-           │                │          │                 │                       │
-  CAN Bus ─┘                │ ┌──────┐ │                 ├─ Predictive Maint.   ├── SSE stream ──→ 📊 Dashboard
-                            │ │  PG  │ │                 │                       │
-                            │ └──┬───┘ │                 ├─ Behavior Inference   │
-                            │    │     │                 │                       │
-                            └────┼─────┘                 ├─ Fleet Optimizer      │
-                                 │                       │                       │
-                                 │                       ├─ Route ETA ───────────┤
-                                 │                       │                       │
-                                 │                       └─ Digital Twin ────────┘
-                                 │                                │
-                                 ▼                                ▼
-                          ┌──────────┐                   ┌──────────────┐
-                          │PostgreSQL│                   │  Telegram    │
-                          │(Railway) │                   │  Alerts 📱   │
-                          └──────────┘                   └──────────────┘
+### Processing Pipeline Detail
+
+```mermaid
+flowchart LR
+    subgraph Ingestion["INGESTION (Node.js)"]
+        A["MQTT<br/>Subscribe"] --> B["Validate<br/>JSON"]
+        B --> C["Persist<br/>PostgreSQL"]
+        C --> D["Forward<br/>Scale Engine"]
+        C --> E["Broadcast<br/>SSE Stream"]
+    end
+
+    subgraph Processing["PROCESSING (Python)"]
+        D --> F["Stream Bus<br/>Route to engines"]
+        F --> G["Normalize<br/>Units & schema"]
+        G --> H["CEP Engine<br/>Rule evaluation"]
+        H --> I["Anomaly<br/>Detection"]
+        I --> J["Digital Twin<br/>State update"]
+        J --> K["Behavior<br/>Inference"]
+    end
+
+    subgraph Output["OUTPUT"]
+        K --> L["Event<br/>Generation"]
+        L --> M["Telegram<br/>Alert"]
+        L --> N["Dashboard<br/>Notification"]
+        K --> O["Driver Score<br/>Update"]
+        K --> P["Predictive<br/>Maintenance Flag"]
+    end
 ```
-
-### Sub-second end-to-end latency
-
-1. **OBD-II sensor** reads RPM, throttle, coolant temp every 0.5s
-2. **ESP32** publishes JSON to MQTT topic
-3. **server.js** receives via MQTT subscriber (~50ms)
-4. **PostgreSQL** persists telemetry (~20ms)
-5. **Scale Engine** processes through relevant engines (~100ms)
-6. **SSE stream** pushes to dashboard (~10ms)
-7. **Dashboard** renders updated chart/map (~16ms)
-
-**Total: ~200ms from sensor to screen**
 
 ---
 
-## ⚡ Key Innovations
+## Service Topology
 
-### 1. 🔄 Database-First AI Architecture (80-85% Cost Reduction)
+Four independent microservices connected via HTTP with graceful degradation at every boundary.
 
-The system queries a local browser SQLite database first for every question. Only complex analytical questions that SQL can't answer are forwarded to Google Gemini.
+```mermaid
+flowchart TB
+    subgraph External["External Services"]
+        BROKER[("MQTT Broker<br/>broker.hivemq.com:1883")]
+        GEMINI[("Google Gemini API<br/>gemini-2.0-flash")]
+        TELEGRAM[("Telegram Bot API")]
+    end
 
+    subgraph Railway["Railway Deployment"]
+        subgraph NODE["Node.js Server — :3000"]
+            SRV["Express + MQTT + SSE"]
+            INT["connector.js<br/>Proxy Layer"]
+        end
+
+        subgraph AI_BE["AI Backend — :8000"]
+            ANA["FleetAnalyzer"]
+            BOT["Telegram Bot"]
+            REP["ReportGenerator"]
+        end
+
+        subgraph ROUTE["Route Engine — :8001"]
+            RANA["RouteAnalyzer"]
+            RINT["BehaviorIntegrator"]
+            RPIP["ReportPipeline"]
+        end
+
+        subgraph SCALE["Scale Engine — :8002"]
+            ENGINES["28 Modular Engines<br/>Auto-registered REST endpoints"]
+        end
+
+        DB[("PostgreSQL<br/>postgres.railway.internal")]
+    end
+
+    BROKER -->|"MQTT :1883"| SRV
+    GEMINI -->|"REST"| ANA
+    GEMINI -->|"REST"| RANA
+    TELEGRAM -->|"Webhook"| BOT
+
+    SRV --> DB
+    INT -->|"HTTP *.internal"| AI_BE
+    INT -->|"HTTP *.internal"| ROUTE
+    INT -->|"HTTP *.internal"| SCALE
+
+    style NODE fill:#e1f5e1,stroke:#2d8a2d
+    style AI_BE fill:#e1e5f5,stroke:#2d4a8a
+    style ROUTE fill:#f5f0e1,stroke:#8a7a2d
+    style SCALE fill:#f5e1e1,stroke:#8a2d2d
 ```
-User asks: "Show all orders from last month"
-  → SQLite answers (FREE) ✓
-
-User asks: "Which driver is most at risk and why?"
-  → SQLite gives driver stats → Gemini synthesizes insight ($0.0001)
-```
-
-> **Result:** 80% of questions answered without any AI API cost. $50/month AI bills → $10/month.
-
-### 2. 🧠 28 Modular AI Engines
-
-Each engine is independent, auto-discovers related engines, and can be hot-swapped without restarting the system. New engines added without modifying existing code.
-
-### 3. 🛡️ On-Device Safety Detection
-
-7 unsafe driving behaviors detected directly on the Arduino — no cloud dependency for safety-critical alerts. The `BehaviorAnalysis` C++ module operates independently of network status.
-
-### 4. 🎯 Graceful Degradation Design
-
-Every downstream service is optional. If the Scale Engine is offline, the dashboard still shows live telemetry. If PostgreSQL is unreachable, the browser SQLite keeps working. Nothing crashes — features degrade, not fail.
-
-### 5. 🔮 Predictive Maintenance from OBD Trends
-
-Monitors coolant temp trends, voltage drops, and RPM stability patterns to predict component failures **before** they strand a vehicle.
 
 ---
 
-## 🛠️ Technology Stack
+## Key Innovations
+
+### 1. Database-First AI Architecture
+
+The browser-side AI engine queries a local SQLite database before escalating to Gemini. This eliminates API costs for routine analytical questions.
+
+```mermaid
+flowchart LR
+    Q["User Question"] --> SQL["SQLite Query<br/>(sql.js WASM)"]
+    SQL -->|"80-85% answered"| A1["Return Result<br/>Cost: $0"]
+    SQL -->|"15-20% complex"| GM["Gemini 2.0 Flash<br/>Context-enhanced prompt"]
+    GM --> A2["Return Insight<br/>Cost: ~$0.0001"]
+
+    style SQL fill:#d4edda,stroke:#28a745
+    style GM fill:#fff3cd,stroke:#ffc107
+```
+
+| Metric | All-Cloud Approach | Database-First Approach |
+|--------|-------------------|------------------------|
+| Monthly AI API cost | ~$50 | ~$10 |
+| Average query latency | 800ms | 50ms (cached) |
+| Offline capability | None | Full (SQLite + IndexedDB) |
+
+### 2. 28 Modular AI Engines
+
+Each engine is an independent Python module that auto-registers REST endpoints via FastAPI. Engines discover related peers through a registry pattern — adding a new engine requires zero changes to existing code. Hot-swap individual engines without restarting the scale platform.
+
+### 3. On-Device Safety Detection
+
+The `BehaviorAnalysis` C++ module runs directly on the ESP32, detecting seven unsafe driving behaviors from raw sensor data before transmission. Safety-critical alerts have zero cloud dependency and survive network outages.
+
+| Behavior | Detection Rule | Severity |
+|----------|---------------|----------|
+| Harsh Braking | Speed drop > 15 km/h within 3 seconds | Warning |
+| Aggressive Launch | Throttle > 90% at speed < 30 km/h | Warning |
+| Cold Engine Abuse | RPM > 3000 with coolant < 70&deg;C | Warning |
+| Engine Lugging | Load > 85% with RPM < 1500 | Warning |
+| Excessive Idling | Speed = 0, RPM > 500 for > 180s | Info |
+| Speeding | Speed > 110 km/h | Critical |
+| Unknown | Custom rule violations | Variable |
+
+### 4. Graceful Degradation at Every Boundary
+
+Every downstream dependency is optional. The integration connector returns structured 503 responses when engines are unreachable. The dashboard continues displaying live telemetry even when the Scale Engine, Route Engine, and AI Backend are all simultaneously offline.
+
+### 5. Predictive Maintenance from OBD Trend Analysis
+
+The Predictive Maintenance engine monitors longitudinal trends in coolant temperature, battery voltage, and RPM stability. Statistical drift detection triggers maintenance flags before components fail, preventing roadside breakdowns.
+
+---
+
+## Technology Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **Hardware** | Arduino C++ (ESP32, MCP2515 CAN) | OBD-II data capture, GPS, on-device safety detection |
-| **IoT Protocol** | MQTT (HiveMQ public broker) | Real-time pub/sub messaging |
-| **Web Server** | Node.js + Express 4.x | HTTP API, SSE streaming, static file serving |
-| **Database (Server)** | PostgreSQL 15 (Railway) | Long-term telemetry & order persistence |
-| **Database (Browser)** | SQLite via sql.js (WebAssembly) | Offline cache, fast local analytics |
-| **Analytics** | Python 3.9+ + FastAPI | 28 modular AI/ML microservices |
-| **AI** | Google Gemini 2.0 Flash | NL insights, route scoring, report synthesis |
-| **Notifications** | Telegram Bot API | Real-time alerts, on-demand PDF reports |
-| **Dashboard** | Leaflet.js, Chart.js, jsPDF, Turf.js | Interactive maps, charts, PDF export |
-| **Stream Bus** | Redis Streams / NATS / In-Memory | High-volume telemetry ingestion |
-| **Testing** | Jest, fake-indexeddb, jsdom | Unit + integration tests |
-| **Deployment** | Railway (Nixpacks) | Containerized, zero-config deploys |
-| **Code Quality** | ESLint + Prettier | Consistent formatting & linting |
+| **Embedded** | Arduino C++ (ESP32, MCP2515 CAN controller) | OBD-II data capture, GPS tracking, on-device safety analysis |
+| **Messaging** | MQTT 5.0 (HiveMQ public broker) | Real-time publish/subscribe telemetry transport |
+| **Application Server** | Node.js 18+ / Express 4.x | REST API, SSE streaming, static asset serving |
+| **Server Database** | PostgreSQL 15 | Long-term telemetry persistence, order management, geofencing |
+| **Browser Database** | SQLite via sql.js (WebAssembly) | Offline cache, local analytics, cost-free AI query layer |
+| **Analytics** | Python 3.9+ / FastAPI | 28 modular AI/ML microservices with auto-generated endpoints |
+| **LLM Integration** | Google Gemini 2.0 Flash | Natural language fleet analysis, route scoring, report synthesis |
+| **Notifications** | Telegram Bot API (python-telegram-bot) | Real-time alert delivery, on-demand PDF report generation |
+| **Frontend** | Leaflet.js, Chart.js, jsPDF, Turf.js | Interactive geospatial visualization, telemetry charts, PDF export |
+| **Stream Processing** | Redis Streams / NATS / In-Memory | High-throughput telemetry ingestion and routing |
+| **PDF Generation** | Jinja2 + WeasyPrint | Templated PDF fleet reports |
+| **Testing** | Jest, fake-indexeddb, jsdom | Isolated unit and integration tests |
+| **Deployment** | Railway (Nixpacks) | Containerized, zero-configuration deployment |
+| **Code Quality** | ESLint, Prettier | Consistent formatting and static analysis |
 
 ---
 
-## 🧠 The 28 AI Engines
+## The 28 AI Engines
 
-All engines live in `scale_engine/` and auto-register REST endpoints via FastAPI.
+All engines reside in `scale_engine/` and expose REST endpoints automatically through the FastAPI engine registry. Each engine is an independent module — add or remove engines without modifying the platform core.
 
-### 📥 Data Ingestion (9 Engines)
+### Engine Category Overview
 
-| # | Engine | File | What it does |
-|---|--------|------|-------------|
-| 1 | **Stream Bus** | `data_ingestion/stream_bus.py` | Distributed message bus (Redis/NATS/memory) for ingesting thousands of data points/sec |
-| 2 | **Timeseries Engine** | `data_ingestion/timeseries_engine.py` | Temporal aggregation — hourly/daily/weekly stats on any metric |
-| 3 | **Storage Tiers** | `data_ingestion/storage_tiers.py` | Hot/warm/cold data lifecycle — recent in memory, older in cold storage |
-| 4 | **Schema Registry** | `data_ingestion/schema_registry.py` | Validates all incoming payloads against expected JSON schema |
-| 5 | **Normalizer** | `data_ingestion/normalizer.py` | Unit standardization — km/h↔mph, °C↔°F, L↔gal |
-| 6 | **Geo Processor** | `data_ingestion/geo_processor.py` | Geofencing, proximity detection, route corridor analysis |
-| 7 | **Fleet State** | `data_ingestion/fleet_state.py` | Current fleet-wide projection — who's online, moving, idle, alerting |
-| 8 | **Data Quality** | `data_ingestion/data_quality.py` | Sensor health monitoring — stale data, gaps, outliers |
-| 9 | **Replay/Backfill** | `data_ingestion/replay_backfill.py` | Historical data replay for backfilling after downtime |
+```mermaid
+flowchart LR
+    subgraph DI["Data Ingestion (9)"]
+        direction TB
+        DI1["Stream Bus"]
+        DI2["Timeseries Engine"]
+        DI3["Storage Tiers"]
+        DI4["Schema Registry"]
+        DI5["Normalizer"]
+        DI6["Geo Processor"]
+        DI7["Fleet State"]
+        DI8["Data Quality"]
+        DI9["Replay / Backfill"]
+    end
 
-### ⚙️ Smart Systems (8 Engines)
+    subgraph SS["Smart Systems (8)"]
+        direction TB
+        SS1["CEP Engine"]
+        SS2["Anomaly Detector"]
+        SS3["Digital Twin"]
+        SS4["Behavior Inference"]
+        SS5["Predictive Maintenance"]
+        SS6["Fleet Optimizer"]
+        SS7["Route ETA"]
+        SS8["Signal Fusion"]
+    end
 
-| # | Engine | File | What it does |
-|---|--------|------|-------------|
-| 10 | **CEP Engine** | `smart_systems/cep_engine.py` | Complex Event Processing — multi-condition rule chains (e.g., "if speeding AND coolant > 110°C → CRITICAL") |
-| 11 | **Anomaly Detector** | `smart_systems/anomaly_detector.py` | Statistical outlier detection — flags unusual fleet-wide behavior patterns |
-| 12 | **Digital Twin** | `smart_systems/digital_twin.py` | Virtual vehicle state model updated in real-time from sensor stream |
-| 13 | **Behavior Inference** | `smart_systems/behavior_inference.py` | Longitudinal driver scoring, trend analysis, coaching recommendations |
-| 14 | **Predictive Maintenance** | `smart_systems/predictive_maintenance.py` | Failure prediction from OBD trends (coolant, voltage, RPM stability) |
-| 15 | **Fleet Optimizer** | `smart_systems/fleet_optimizer.py` | Scheduling optimization, driver↔order matching, load balancing |
-| 16 | **Route ETA** | `smart_systems/route_eta.py` | ETA prediction with/without driver behavior history |
-| 17 | **Signal Fusion** | `smart_systems/signal_fusion.py` | Multi-sensor fusion for higher-accuracy speed and position |
+    subgraph ML["AI / ML (8)"]
+        direction TB
+        ML1["Feature Store"]
+        ML2["Model Trainer"]
+        ML3["Model Server"]
+        ML4["Vector RAG"]
+        ML5["Forecaster"]
+        ML6["Knowledge Graph"]
+        ML7["MLOps"]
+        ML8["AI Orchestrator"]
+    end
 
-### 🤖 AI/ML (8 Engines)
+    subgraph EC["Edge / Cloud (3)"]
+        direction TB
+        EC1["Edge Model Manager"]
+        EC2["Sync Engine"]
+        EC3["Federated Learning"]
+    end
 
-| # | Engine | File | What it does |
-|---|--------|------|-------------|
-| 18 | **Feature Store** | `ai_ml/feature_store.py` | Computes feature vectors from raw telemetry for ML model input |
-| 19 | **Model Trainer** | `ai_ml/model_trainer.py` | Trains ML models (driver risk, fuel efficiency, maintenance prediction) |
-| 20 | **Model Server** | `ai_ml/model_server.py` | Serves trained models for real-time inference |
-| 21 | **Vector RAG** | `ai_ml/vector_rag.py` | Retrieval-Augmented Generation with semantic vector search over fleet history |
-| 22 | **Forecaster** | `ai_ml/forecaster.py` | Time-series forecasting for fuel consumption, delivery delays |
-| 23 | **Knowledge Graph** | `ai_ml/knowledge_graph.py` | Fleet-wide relationship graph (drivers→vehicles→routes→orders) |
-| 24 | **MLOps** | `ai_ml/mlops.py` | Model versioning, drift detection, automated rollback |
-| 25 | **AI Orchestrator** | `ai_ml/ai_orchestrator.py` | Multi-agent coordination — routes work between engines |
+    DI --> SS --> ML --> EC
+```
 
-### ☁️ Edge/Cloud Bridge (3 Engines)
+### Data Ingestion (Engines 1–9)
 
-| # | Engine | File | What it does |
-|---|--------|------|-------------|
-| 26 | **Edge Model Mgr** | `edge_cloud/edge_model_mgr.py` | Creates, compresses, and rolls out ML models to edge devices |
-| 27 | **Sync Engine** | `edge_cloud/sync_engine.py` | Cloud↔edge data synchronization with conflict resolution |
-| 28 | **Federated Learning** | `edge_cloud/federated_learning.py` | Federated learning rounds — models improve from edge data without raw data leaving devices |
+| # | Engine | Source File | Responsibility |
+|---|--------|------------|----------------|
+| 1 | Stream Bus | `data_ingestion/stream_bus.py` | Distributed message routing — Redis Streams, NATS, or in-memory. Handles thousands of data points per second. |
+| 2 | Timeseries Engine | `data_ingestion/timeseries_engine.py` | Temporal aggregation with configurable windows (hourly, daily, weekly) on any telemetry metric. |
+| 3 | Storage Tiers | `data_ingestion/storage_tiers.py` | Hot/warm/cold data lifecycle management — recent data in memory, aged data in cold storage. |
+| 4 | Schema Registry | `data_ingestion/schema_registry.py` | Validates every incoming payload against expected JSON schema; rejects malformed data. |
+| 5 | Normalizer | `data_ingestion/normalizer.py` | Unit standardization pipeline — km/h &harr; mph, &deg;C &harr; &deg;F, L &harr; gal. |
+| 6 | Geo Processor | `data_ingestion/geo_processor.py` | Geofence evaluation, proximity detection, route corridor analysis. |
+| 7 | Fleet State | `data_ingestion/fleet_state.py` | Materialized fleet-wide projection — online count, moving count, idle count, alerting count. |
+| 8 | Data Quality | `data_ingestion/data_quality.py` | Sensor health monitoring — stale data detection, gap analysis, outlier flagging. |
+| 9 | Replay / Backfill | `data_ingestion/replay_backfill.py` | Historical data replay engine for backfilling telemetry after service downtime. |
 
-### 🔍 System Introspector
+### Smart Systems (Engines 10–17)
 
-| Engine | File | What it does |
-|--------|------|-------------|
-| **System Analyzer** | `system_analyzer.py` | AI-powered full system introspection — "show me all engines and their health" |
+| # | Engine | Source File | Responsibility |
+|---|--------|------------|----------------|
+| 10 | CEP Engine | `smart_systems/cep_engine.py` | Complex Event Processing — multi-condition rule chains (e.g., "speeding AND coolant > 110&deg;C" triggers CRITICAL). |
+| 11 | Anomaly Detector | `smart_systems/anomaly_detector.py` | Statistical outlier detection across fleet-wide behavior patterns using Z-score and IQR methods. |
+| 12 | Digital Twin | `smart_systems/digital_twin.py` | Virtual vehicle state model updated in real-time from the sensor stream — mirrors physical vehicle. |
+| 13 | Behavior Inference | `smart_systems/behavior_inference.py` | Longitudinal driver scoring with trend analysis and automated coaching recommendations. |
+| 14 | Predictive Maintenance | `smart_systems/predictive_maintenance.py` | Failure probability estimation from OBD trends — coolant, voltage, RPM stability. |
+| 15 | Fleet Optimizer | `smart_systems/fleet_optimizer.py` | Dispatch optimization — driver-to-order matching, load balancing, schedule optimization. |
+| 16 | Route ETA | `smart_systems/route_eta.py` | ETA prediction engine with and without driver behavior history features. |
+| 17 | Signal Fusion | `smart_systems/signal_fusion.py` | Multi-sensor fusion (GPS + OBD + accelerometer) for higher-accuracy speed and position estimation. |
+
+### AI / ML (Engines 18–25)
+
+| # | Engine | Source File | Responsibility |
+|---|--------|------------|----------------|
+| 18 | Feature Store | `ai_ml/feature_store.py` | Computes feature vectors from raw telemetry for ML model training and inference. |
+| 19 | Model Trainer | `ai_ml/model_trainer.py` | Trains ML models — driver risk classification, fuel efficiency regression, maintenance prediction. |
+| 20 | Model Server | `ai_ml/model_server.py` | Low-latency model inference serving for real-time prediction requests. |
+| 21 | Vector RAG | `ai_ml/vector_rag.py` | Retrieval-Augmented Generation with semantic vector search over fleet operational history. |
+| 22 | Forecaster | `ai_ml/forecaster.py` | Time-series forecasting for fuel consumption and delivery delay prediction. |
+| 23 | Knowledge Graph | `ai_ml/knowledge_graph.py` | Fleet-wide relationship model — drivers, vehicles, routes, orders, and their interactions. |
+| 24 | MLOps | `ai_ml/mlops.py` | Model lifecycle management — versioning, drift detection, automated rollback triggers. |
+| 25 | AI Orchestrator | `ai_ml/ai_orchestrator.py` | Multi-agent coordination layer — routes tasks between engines based on capability registry. |
+
+### Edge / Cloud Bridge (Engines 26–28)
+
+| # | Engine | Source File | Responsibility |
+|---|--------|------------|----------------|
+| 26 | Edge Model Manager | `edge_cloud/edge_model_mgr.py` | Model compression, quantization, and rollout to edge devices with confirmation tracking. |
+| 27 | Sync Engine | `edge_cloud/sync_engine.py` | Bidirectional cloud-to-edge data synchronization with conflict resolution. |
+| 28 | Federated Learning | `edge_cloud/federated_learning.py` | Federated learning round management — models improve from edge data without raw data leaving the device. |
+
+### System Introspector
+
+| Engine | Source File | Responsibility |
+|--------|------------|----------------|
+| System Analyzer | `system_analyzer.py` | AI-powered full-system introspection — engine health, data flow status, cross-service diagnostics. |
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 Vision/
-│
-├── 🎨 FRONTEND
-│   ├── index.html                  (529 KB)  Main dashboard — Leaflet maps, Chart.js graphs, AI chat
-│   ├── login.html                            Auth page
-│   ├── login.js                              Auth logic
-│   ├── login.css                             Auth styles
-│   └── z_logo.png                  (420 KB)  Project logo
-│
-├── 🖥️ BACKEND (Node.js)
-│   ├── server.js                   (18.8 KB) Express server — MQTT, REST API, SSE, proxy
-│   ├── package.json                          Node dependencies & scripts
-│   ├── package-lock.json                     Lockfile
-│   ├── .env.example                          Environment variable template
-│   ├── .eslintrc.cjs                         ESLint config
-│   ├── .prettierrc                           Prettier config
-│   ├── .prettierignore                       Prettier ignore list
-│   └── jest.config.js                        Jest test configuration
-│
-├── 🔗 INTEGRATION
-│   └── integration/
-│       └── connector.js                      Bridge: Node.js ↔ Python microservices
-│
-├── 🤖 AI ENGINES (Python/FastAPI)
-│   ├── scale_engine/                (Port 8002)  28 AI engines
-│   │   ├── main.py                  (622 lines)  FastAPI app & engine registry
-│   │   ├── system_analyzer.py                    AI system introspection
-│   │   ├── db.py                                Engine database helper
-│   │   ├── data_ingestion/          (9 engines)  Stream bus, timeseries, geo, etc.
-│   │   ├── smart_systems/           (8 engines)  CEP, anomaly, digital twin, etc.
-│   │   ├── ai_ml/                   (8 engines)  Feature store, models, forecast, etc.
-│   │   └── edge_cloud/              (3 engines)  Edge models, sync, federated learning
-│   │
-│   ├── route_engine/                (Port 8001)  Route optimization
-│   │   ├── main.py                  (345 lines)  FastAPI app
-│   │   ├── route_analyzer.py                     AI + deterministic route scoring
-│   │   ├── behavior_integrator.py                Driver behavior integration
-│   │   ├── report_pipeline.py                    4-stage report generation
-│   │   └── db.py                                Route DB helper
-│   │
-│   └── ai_backend/                  (Port 8000)  AI & Telegram
-│       ├── main.py                  (93 lines)   FastAPI app
-│       ├── analyzer.py                           Fleet analyzer (Gemini wrapper)
-│       ├── telegram_bot.py                       Telegram bot handlers
-│       ├── report_generator.py                   PDF report (Jinja2 + WeasyPrint)
-│       └── db.py                                Fleet snapshot queries
-│
-├── 🗄️ DATABASE
-│   ├── database/
-│   │   ├── db.js                                Core SQLite (sql.js WASM) — init, auto-save
-│   │   ├── dal.js                               Data Access Layer — CRUD for all tables
-│   │   ├── service.js                           High-level service API
-│   │   ├── ai-engine.js                         Smart AI — SQLite first, Gemini fallback
-│   │   ├── migrate.js                           Migrate localStorage → SQLite
-│   │   ├── integration.js                       Patch existing globals to use DB
-│   │   ├── loader.js                            Single include for HTML
-│   │   ├── schema.sql              (456 lines)  Browser SQLite schema (12 tables)
-│   │   ├── pg-schema.sql           (293 lines)  PostgreSQL schema (12 tables + 4 views)
-│   │   └── README.md               (24 KB)      Database documentation
-│   │
-│   └── database/README.md                       Full database architecture & API docs
-│
-├── ⚙️ HARDWARE (Arduino C++)
-│   ├── GPS_device.ino               (Empty)     GPS module placeholder
-│   ├── obd2_scanner.ino             (21 KB)     ESP32 OBD-II scanner (CAN bus via MCP2515)
-│   ├── BehaviorAnalysis.h                       On-device safety detection header
-│   └── BehaviorAnalysis.cpp                     On-device safety detection implementation
-│
-├── 🧪 TESTS
-│   └── tests/
-│       ├── server.test.js           (78 lines)  7 server integration tests
-│       ├── helpers/
-│       │   ├── server-process.js                Server process manager for tests
-│       │   └── browser-db-harness.js            Browser DB test harness (jsdom + fake-indexeddb)
-│       └── database/
-│           ├── ai-engine.test.js                 AI engine tests
-│           ├── dal.test.js                       DAL tests
-│           └── db.test.js                        Core DB tests
-│
-├── 📚 DOCUMENTATION
-│   ├── README.md                                ← YOU ARE HERE
-│   ├── FULL_SYSTEM_DECOMPOSITION.md  (21 KB)    Deep dive into all 6 system layers
-│   ├── PRESENTATION_GUIDE.md         (8.7 KB)   Supervisor presentation slide-by-slide guide
-│   ├── SYSTEM_AT_A_GLANCE.md         (14.5 KB)  Visual reference with ASCII diagrams
-│   ├── THESIS_EXPLANATION.md         (16.2 KB)  Full thesis overview & Q&A
-│   ├── Code Architecture.drawio      (18.8 KB)  Draw.io architecture diagram
-│   ├── AI-TEST.md                                AI engine database-first testing guide
-│   └── AI-UPGRADE.md                             AI upgrade from Telegram bot to browser AI
-│
-└── 🚢 DEPLOYMENT
-    ├── railway.json                              Node.js server Railway config
-    ├── root/About/                               Additional docs (AI-TEST, AI-UPGRADE)
-    │
-    ├── ai_backend/railway.json                   AI backend Railway config
-    ├── ai_backend/nixpacks.toml                  AI backend Nixpacks build
-    ├── route_engine/railway.json                 Route engine Railway config
-    ├── route_engine/nixpacks.toml                Route engine Nixpacks build
-    ├── scale_engine/railway.json                 Scale engine Railway config
-    └── scale_engine/nixpacks.toml                Scale engine Nixpacks build
+|
+|-- Frontend
+|   |-- index.html                   Main dashboard (Leaflet maps, Chart.js, AI chat)
+|   |-- login.html                   Authentication page
+|   |-- login.js                     Authentication logic
+|   |-- login.css                    Authentication styles
+|   +-- z_logo.png                   Project brand asset
+|
+|-- Backend (Node.js)
+|   |-- server.js                    Express server — MQTT, REST API, SSE, proxy
+|   |-- package.json                 Dependencies and npm scripts
+|   |-- .env.example                 Environment variable template with documentation
+|   |-- .eslintrc.cjs                ESLint configuration
+|   |-- .prettierrc                  Prettier configuration
+|   +-- jest.config.js               Jest test runner configuration
+|
+|-- Integration Bridge
+|   +-- integration/
+|       +-- connector.js             HTTP proxy layer — Node.js to Python microservices
+|
+|-- AI Engines (Python / FastAPI)
+|   |-- scale_engine/                Port 8002 — 28-engine intelligence platform
+|   |   |-- main.py                  FastAPI application & engine registry
+|   |   |-- system_analyzer.py       AI system introspection engine
+|   |   |-- db.py                    Engine database utilities
+|   |   |-- data_ingestion/          9 engines — stream bus, timeseries, geo, etc.
+|   |   |-- smart_systems/           8 engines — CEP, anomaly, digital twin, etc.
+|   |   |-- ai_ml/                   8 engines — feature store, models, forecast, etc.
+|   |   +-- edge_cloud/              3 engines — edge models, sync, federated learning
+|   |
+|   |-- route_engine/                Port 8001 — Route optimization service
+|   |   |-- main.py                  FastAPI application
+|   |   |-- route_analyzer.py        Hybrid AI + deterministic route scoring
+|   |   |-- behavior_integrator.py   Driver behavior data integration
+|   |   |-- report_pipeline.py       4-stage report generation pipeline
+|   |   +-- db.py                    Route database queries
+|   |
+|   +-- ai_backend/                  Port 8000 — AI analysis & Telegram notifications
+|       |-- main.py                  FastAPI application
+|       |-- analyzer.py              Fleet analyzer (Gemini 2.0 Flash wrapper)
+|       |-- telegram_bot.py          Telegram bot command handlers
+|       |-- report_generator.py      PDF report generator (Jinja2 + WeasyPrint)
+|       +-- db.py                    Fleet snapshot query helpers
+|
+|-- Database Module
+|   +-- database/
+|       |-- db.js                    Core SQLite engine (sql.js WASM) — init, auto-save
+|       |-- dal.js                   Data Access Layer — typed CRUD for all 12 tables
+|       |-- service.js               High-level service API with business logic
+|       |-- ai-engine.js             Smart AI — SQLite-first query, Gemini fallback
+|       |-- migrate.js               Legacy localStorage to SQLite migration
+|       |-- integration.js           Global function patching for database use
+|       |-- loader.js                Single script include for HTML pages
+|       |-- schema.sql               Browser SQLite schema (12 tables)
+|       |-- pg-schema.sql            PostgreSQL schema (12 tables + 4 views)
+|       +-- README.md                Database architecture reference
+|
+|-- Embedded Firmware (Arduino C++)
+|   |-- GPS_device.ino               GPS module firmware (ESP32)
+|   |-- obd2_scanner.ino             OBD-II CAN bus scanner (ESP32 + MCP2515)
+|   |-- BehaviorAnalysis.h           On-device safety detection (header)
+|   +-- BehaviorAnalysis.cpp         On-device safety detection (implementation)
+|
+|-- Test Suite
+|   +-- tests/
+|       |-- server.test.js           7 server integration tests
+|       |-- helpers/
+|       |   |-- server-process.js    Isolated server process manager
+|       |   +-- browser-db-harness.js Browser DB test environment (jsdom)
+|       +-- database/
+|           |-- ai-engine.test.js    Smart AI engine unit tests
+|           |-- dal.test.js          Data Access Layer unit tests
+|           +-- db.test.js           Core database unit tests
+|
+|-- Documentation
+|   |-- README.md                    Primary project documentation
+|   |-- FULL_SYSTEM_DECOMPOSITION.md Complete 6-layer architectural decomposition
+|   |-- SYSTEM_AT_A_GLANCE.md        Visual reference with system diagrams
+|   |-- THESIS_EXPLANATION.md        Thesis overview, innovations, and Q&A
+|   |-- PRESENTATION_GUIDE.md        Defense presentation guide and talking points
+|   |-- Code Architecture.drawio     Full visual architecture diagram (Draw.io)
+|   +-- root/About/
+|       |-- AI-UPGRADE.md            AI architecture evolution narrative
+|       +-- AI-TEST.md               Database-first AI testing methodology
+|
++-- Deployment
+    |-- railway.json                 Node.js server deployment configuration
+    |-- ai_backend/railway.json      AI backend deployment configuration
+    |-- route_engine/railway.json    Route engine deployment configuration
+    +-- scale_engine/railway.json    Scale engine deployment configuration
 ```
 
 ---
 
-## 🚀 Getting Started
+## Database Design
+
+Dual-database architecture — PostgreSQL for server-side persistence, SQLite (WebAssembly) for browser-side caching. Both databases share schema parity across 12 tables.
+
+```mermaid
+erDiagram
+    drivers ||--o{ devices : "assigned to"
+    drivers ||--o{ orders : "delivers"
+    drivers ||--o{ trips : "performs"
+    drivers ||--o{ driver_behavior_history : "generates"
+    devices ||--o{ telemetry : "produces"
+    devices ||--o{ geofence_events : "triggers"
+    orders ||--o{ trips : "tracked by"
+    orders }o--|| customers : "placed by"
+    geofences ||--o{ geofence_events : "defines"
+    telemetry ||--o{ events : "may trigger"
+
+    drivers {
+        int id PK
+        string name
+        string license_number
+        float safety_score
+        json behavior_events
+        int vehicle_id FK
+    }
+
+    devices {
+        int id PK
+        string device_identifier
+        string mqtt_topic
+        boolean is_online
+        int driver_id FK
+    }
+
+    telemetry {
+        bigint id PK
+        int device_id FK
+        json gps
+        json obd2
+        json fuel
+        json sensor
+        json raw_payload
+        timestamp recorded_at
+    }
+
+    orders {
+        int id PK
+        int driver_id FK
+        int device_id FK
+        int customer_id FK
+        json origin
+        json destination
+        string cargo_type
+        string status
+    }
+
+    events {
+        int id PK
+        int device_id FK
+        string type
+        string category
+        string severity
+        json sensor_state
+        boolean acknowledged
+    }
+
+    trips {
+        int id PK
+        int driver_id FK
+        int order_id FK
+        float duration
+        float distance
+        float avg_speed
+        float fuel_used
+        int event_count
+    }
+```
+
+### Database Views
+
+| View | Purpose |
+|------|---------|
+| `v_active_orders` | Orders not yet completed or cancelled, joined with driver and device info |
+| `v_device_latest_telemetry` | Most recent telemetry record per device (avoids expensive subquery) |
+| `v_event_summary_24h` | Event counts grouped by type within the trailing 24-hour window |
+| `v_order_stats` | Order aggregations — counts by status, type, and assigned driver |
+
+Full schema definitions: [database/pg-schema.sql](database/pg-schema.sql) (PostgreSQL, 293 lines) | [database/schema.sql](database/schema.sql) (SQLite, 456 lines)
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js** ≥ 18.0.0
-- **Python** ≥ 3.9
-- **PostgreSQL** 15 (or skip for degraded mode)
-- **Arduino IDE** (for ESP32 deployment)
-- **Google Gemini API Key** (for AI features)
+| Software | Minimum Version | Required | Purpose |
+|----------|----------------|----------|---------|
+| Node.js | 18.0.0 | Required | Express application server |
+| Python | 3.9 | Optional | AI microservices (degrade gracefully if absent) |
+| PostgreSQL | 15 | Optional | Persistent telemetry storage |
+| Arduino IDE | 2.x | Optional | ESP32 firmware deployment |
+| Gemini API Key | — | Optional | AI-powered analysis features |
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/YOUR_USERNAME/sgu-logistics.git
-cd sgu-logistics
-```
-
-### 2. Install Node.js Backend
+### 1. Clone and Install
 
 ```bash
+git clone https://github.com/moonr5/Vision.git
+cd Vision
 npm install
 ```
 
-### 3. Configure Environment
+### 2. Configure Environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your actual values
 ```
 
-Required environment variables:
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | For persistence | — | PostgreSQL connection string |
+| `PORT` | No | `3000` | Express server port |
+| `GEMINI_API_KEY` | No | — | Google Gemini API key |
+| `TELEGRAM_BOT_TOKEN` | No | — | Telegram bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | No | — | Restrict bot to a single chat ID |
+| `PYTHON_AI_URL` | No | — | AI backend service URL |
+| `ROUTE_ENGINE_URL` | No | — | Route engine service URL |
+| `SCALE_ENGINE_URL` | No | — | Scale engine service URL |
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes (for persistence) | PostgreSQL connection string |
-| `PORT` | No (default: 3000) | Express server port |
-| `GEMINI_API_KEY` | No (AI degrades) | Google Gemini API key |
-| `TELEGRAM_BOT_TOKEN` | No | Telegram bot token from @BotFather |
-| `TELEGRAM_CHAT_ID` | No | Restrict bot to single chat |
-| `PYTHON_AI_URL` | No | Python AI backend URL |
-| `ROUTE_ENGINE_URL` | No | Route engine URL |
-| `SCALE_ENGINE_URL` | No | Scale engine URL |
-
-### 4. Start the Node.js Server
+### 3. Start the Server
 
 ```bash
-npm start        # Production
-npm run dev      # Development
+npm start
 ```
 
-Server starts at **http://localhost:3000**
+The dashboard is available at `http://localhost:3000`.
 
-### 5. Start Python Microservices (Optional — each runs independently)
+### 4. Start Python Microservices (Optional)
+
+Each service runs independently and the system degrades gracefully without them.
 
 ```bash
-# Terminal 1 — AI Backend (Gemini + Telegram)
+# Terminal 1 — AI Backend (Gemini analysis + Telegram bot)
 cd ai_backend
 pip install -r requirements.txt
 uvicorn main:app --port 8000
 
-# Terminal 2 — Route Engine
+# Terminal 2 — Route Engine (route optimization)
 cd route_engine
 pip install -r requirements.txt
 uvicorn main:app --port 8001
@@ -469,181 +680,196 @@ pip install -r requirements.txt
 uvicorn main:app --port 8002
 ```
 
-### 6. Deploy Arduino Firmware
+### 5. Deploy Arduino Firmware
 
-1. Open `obd2_scanner.ino` in Arduino IDE
+1. Open `obd2_scanner.ino` in the Arduino IDE
 2. Select board: **ESP32 Dev Module**
-3. Configure WiFi credentials in the sketch
-4. Upload to your ESP32 with MCP2515 CAN bus module
-
-### 7. Open the Dashboard
-
-Navigate to **http://localhost:3000** and log in.
+3. Configure WiFi SSID and password in the sketch
+4. Wire the MCP2515 CAN controller to the ESP32 SPI pins
+5. Upload to the device
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
-### Node.js Server (`localhost:3000`)
+### Node.js Application Server — Port 3000
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Login page |
-| `GET` | `/api/stream` | SSE live telemetry stream |
-| `GET` | `/api/telemetry/latest` | Latest telemetry per device |
-| `GET` | `/api/telemetry/:deviceId` | Device telemetry history (max 1000) |
-| `GET` | `/api/events` | Recent events (max 500) |
-| `GET` | `/api/devices` | All registered devices |
-| `POST` | `/api/ai/analyze` | Proxy to Python AI backend |
-| `GET` | `/health` | Full health check (DB, MQTT, SSE, engines) |
+| Method | Endpoint | Response | Description |
+|--------|----------|----------|-------------|
+| `GET` | `/` | `text/html` | Authentication page |
+| `GET` | `/api/stream` | `text/event-stream` | Server-Sent Events live telemetry feed |
+| `GET` | `/api/telemetry/latest` | `application/json` | Most recent telemetry record per device |
+| `GET` | `/api/telemetry/:deviceId` | `application/json` | Telemetry history for a device (limit: 1000) |
+| `GET` | `/api/events` | `application/json` | Recent events across all devices (limit: 500) |
+| `GET` | `/api/devices` | `application/json` | All registered IoT devices with status |
+| `POST` | `/api/ai/analyze` | `application/json` | Proxy analysis request to Python AI backend |
+| `GET` | `/health` | `application/json` | Full system health — DB, MQTT, SSE, all engines |
 
-### Route Engine (`localhost:8001`)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/route/analyze` | Score 3 candidate routes for a driver |
-| `POST` | `/api/route/compare` | Compare routes without driver context |
-| `POST` | `/api/route/driver-match` | Find best driver for a fixed route |
-| `POST` | `/api/route/report` | 4-stage report pipeline |
-| `GET` | `/api/route/driver/{id}` | Driver behavior profile |
-| `GET` | `/api/route/drivers` | All drivers with behavior summaries |
-
-### Scale Engine (`localhost:8002`)
-
-50+ auto-registered endpoints — see `scale_engine/main.py` for the full registry.
-Each of the 28 engines exposes its own REST endpoints automatically.
-
-### AI Backend (`localhost:8000`)
+### Route Engine — Port 8001
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/ai/analyze` | Fleet analysis via Gemini |
-| `POST` | `/api/ai/telegram-webhook` | Telegram bot webhook |
+| `POST` | `/api/route/analyze` | Score three candidate routes across five dimensions for a given driver |
+| `POST` | `/api/route/compare` | Compare routes without driver context; optionally rank drivers for the best route |
+| `POST` | `/api/route/driver-match` | Find the optimal driver for a fixed route based on behavior history |
+| `POST` | `/api/route/report` | Execute the four-stage report pipeline (Collect, Analyze, AI-Synthesize, Output) |
+| `GET` | `/api/route/driver/{id}` | Retrieve a driver's complete behavior profile |
+| `GET` | `/api/route/drivers` | List all drivers with behavior summaries |
+
+### Scale Engine — Port 8002
+
+Fifty-plus auto-registered endpoints — one per engine. See [scale_engine/main.py](scale_engine/main.py) for the complete engine registry and endpoint map.
+
+### AI Backend — Port 8000
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/ai/analyze` | Fleet-wide analysis via Gemini 2.0 Flash with database context |
+| `POST` | `/api/ai/telegram-webhook` | Telegram Bot API webhook endpoint |
 
 ---
 
-## 🗄️ Database Schema
-
-### Tables (12)
-
-| Table | Purpose | Key Columns |
-|-------|---------|-------------|
-| `drivers` | Driver profiles | safety_score, behavior_events (JSON), vehicle_id |
-| `devices` | IoT device registry | mqtt_topic, is_online, driver_id |
-| `customers` | Customer directory | name, contact, address |
-| `orders` | Order management | origin/destination, driver_id, cargo_type, status |
-| `telemetry` | Main sensor data store | gps, obd2, fuel, sensor (all JSON), raw_payload |
-| `events` | Alerts & events | type, category, sensor_state, acknowledged |
-| `geofences` | Virtual boundaries | type (circle/polygon), center, radius, vertices |
-| `geofence_events` | Boundary crossings | event type (enter/exit), direction |
-| `trips` | Trip sessions | duration, distance, avg_speed, fuel_used, event_count |
-| `settings` | Key-value config | MQTT, map, alerts, retention policies |
-| `api_usage` | API audit log | endpoint, method, status, response_time |
-| `driver_behavior_history` | Persistent behavior log | event_type, severity, speed, rpm, throttle |
-
-### Views (4)
-
-- `v_active_orders` — Active orders with driver info
-- `v_device_latest_telemetry` — Most recent telemetry per device
-- `v_event_summary_24h` — Event type counts in last 24h
-- `v_order_stats` — Order status/type aggregations
-
-> Full schema: [database/pg-schema.sql](database/pg-schema.sql) (PostgreSQL) | [database/schema.sql](database/schema.sql) (SQLite)
-
----
-
-## 🧪 Testing
+## Testing
 
 ```bash
-# Run all tests (sequential)
-npm test
-
-# Server integration tests only
-npm run test:server
-
-# Database module tests only
-npm run test:database
-
-# Linting
-npm run lint
-npm run lint:fix
-
-# Formatting
-npm run format
-npm run format:check
+npm test                  # Full test suite (sequential execution)
+npm run test:server       # Server integration tests only
+npm run test:database     # Database module tests only
+npm run lint              # ESLint static analysis
+npm run lint:fix          # ESLint with automatic fixes
+npm run format            # Prettier formatting
+npm run format:check      # Prettier format verification
 ```
 
 ### Test Architecture
 
-| File | Tests | Framework |
-|------|-------|-----------|
-| [tests/server.test.js](tests/server.test.js) | 7 integration tests: health, empty arrays, AI proxy 503, login page, schema file | Jest |
-| [tests/database/db.test.js](tests/database/db.test.js) | Core SQLite init, CRUD, IndexedDB persistence | Jest + fake-indexeddb |
-| [tests/database/dal.test.js](tests/database/dal.test.js) | Data Access Layer operations | Jest + jsdom |
-| [tests/database/ai-engine.test.js](tests/database/ai-engine.test.js) | Smart AI database-first logic | Jest + jsdom |
+```mermaid
+flowchart LR
+    subgraph Server["Server Tests"]
+        S1["Health endpoint"]
+        S2["Empty arrays (no DB)"]
+        S3["AI proxy 503"]
+        S4["Login page serve"]
+        S5["Schema file exists"]
+    end
+
+    subgraph DB["Database Tests"]
+        D1["Core: init, CRUD, persistence"]
+        D2["DAL: typed operations"]
+        D3["AI Engine: SQLite-first logic"]
+    end
+
+    subgraph Infrastructure["Test Infrastructure"]
+        J["Jest Runner"]
+        FDB["fake-indexeddb"]
+        JSDOM["jsdom"]
+        SPM["Server Process Manager"]
+    end
+
+    Server --> J
+    DB --> J
+    J --> FDB
+    J --> JSDOM
+    J --> SPM
+```
+
+| Test File | Coverage | Dependencies |
+|-----------|----------|--------------|
+| [tests/server.test.js](tests/server.test.js) | 7 integration tests — health checks, proxy behavior, static serving | Jest |
+| [tests/database/db.test.js](tests/database/db.test.js) | Core SQLite — initialization, CRUD operations, IndexedDB persistence | Jest + fake-indexeddb |
+| [tests/database/dal.test.js](tests/database/dal.test.js) | Data Access Layer — typed operations for all tables | Jest + jsdom |
+| [tests/database/ai-engine.test.js](tests/database/ai-engine.test.js) | Smart AI — database-first query routing and fallback logic | Jest + jsdom |
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Railway (Recommended)
 
-Each service has its own `railway.json` and `nixpacks.toml` for independent deployment:
+Each service deploys independently via Nixpacks with zero configuration. Services communicate over Railway's private network (`*.railway.internal`).
 
-```bash
-# Deploy Node.js server
-railway up
+```mermaid
+flowchart TB
+    subgraph Railway["Railway Project"]
+        subgraph S1["Node.js Server"]
+            NS["server.js<br/>Port 3000"]
+        end
+        subgraph S2["AI Backend"]
+            AB["main.py<br/>Port 8000"]
+        end
+        subgraph S3["Route Engine"]
+            RE["main.py<br/>Port 8001"]
+        end
+        subgraph S4["Scale Engine"]
+            SE["main.py<br/>Port 8002"]
+        end
+        subgraph S5["PostgreSQL"]
+            DB[("Port 5432")]
+        end
+    end
 
-# Deploy each Python service independently
-cd ai_backend && railway up
-cd route_engine && railway up
-cd scale_engine && railway up
+    NS -->|"private network"| AB
+    NS -->|"private network"| RE
+    NS -->|"private network"| SE
+    NS --> DB
+
+    Internet((Internet)) -->|"HTTPS"| NS
+    Internet -->|"HTTPS"| AB
 ```
 
-Services communicate via Railway private networking (`*.railway.internal`).
+```bash
+# Deploy each service independently
+railway up                          # Node.js server
+cd ai_backend && railway up         # AI backend
+cd route_engine && railway up       # Route engine
+cd scale_engine && railway up       # Scale engine
+```
 
-### Architecture Diagram
+Each service directory contains its own `railway.json` (runtime configuration) and `nixpacks.toml` (build configuration).
 
-The [Code Architecture.drawio](Code%20Architecture.drawio) file contains the full system integration map. Open it at [app.diagrams.net](https://app.diagrams.net/).
+### Visual Architecture Diagram
 
----
-
-## 📚 Documentation Index
-
-| Document | Size | Content |
-|----------|------|---------|
-| [README.md](README.md) | *this file* | Project overview, architecture, API, getting started |
-| [FULL_SYSTEM_DECOMPOSITION.md](FULL_SYSTEM_DECOMPOSITION.md) | 21 KB | Deep dive into all 6 system layers, deployment env vars, extension points |
-| [SYSTEM_AT_A_GLANCE.md](SYSTEM_AT_A_GLANCE.md) | 14.5 KB | Visual reference — ASCII diagrams, data journey, architecture justifications |
-| [THESIS_EXPLANATION.md](THESIS_EXPLANATION.md) | 16.2 KB | Full thesis: executive summary, innovation points, use cases, Q&A |
-| [PRESENTATION_GUIDE.md](PRESENTATION_GUIDE.md) | 8.7 KB | Supervisor presentation: slide structure, elevator pitch, demo talking points |
-| [database/README.md](database/README.md) | 24 KB | Database architecture, API reference, schema docs, troubleshooting |
-| [root/About/AI-UPGRADE.md](root/About/AI-UPGRADE.md) | — | AI upgrade from Telegram bot → browser SQLite AI (80% cost reduction) |
-| [root/About/AI-TEST.md](root/About/AI-TEST.md) | — | How to test the smart AI engine's database-first querying |
-| [Code Architecture.drawio](Code%20Architecture.drawio) | 18.8 KB | Full visual architecture diagram (Diagrams.net) |
+The file [Code Architecture.drawio](Code%20Architecture.drawio) contains the complete system integration map. Open with [app.diagrams.net](https://app.diagrams.net/).
 
 ---
 
-## 🎓 Academic Context
+## Documentation Index
 
-This project was developed as a **university capstone thesis** demonstrating:
-
-- **IoT/Fog Computing** — Edge processing on Arduino before cloud ingestion
-- **Distributed Systems** — 4 independent microservices with graceful degradation
-- **AI/ML Pipeline** — 28 engines covering ingestion → processing → prediction → edge deployment
-- **Database Design** — Dual PostgreSQL + SQLite architecture with schema parity
-- **Full-Stack Engineering** — Hardware (C++) → Backend (Node.js) → AI (Python) → Frontend (HTML5)
-- **Cost-Efficient AI** — Database-first architecture proves 80-85% of AI queries can be answered without API calls
+| Document | Content |
+|----------|---------|
+| [README.md](README.md) | Primary documentation — architecture, data flow, API reference, setup guide |
+| [FULL_SYSTEM_DECOMPOSITION.md](FULL_SYSTEM_DECOMPOSITION.md) | Complete architectural decomposition of all six system layers with extension points |
+| [SYSTEM_AT_A_GLANCE.md](SYSTEM_AT_A_GLANCE.md) | Visual quick-reference with system diagrams, folder map, and data journey sequence |
+| [THESIS_EXPLANATION.md](THESIS_EXPLANATION.md) | Thesis executive summary, five innovation claims, use cases, common Q&A |
+| [PRESENTATION_GUIDE.md](PRESENTATION_GUIDE.md) | Defense presentation structure, 30-second elevator pitch, demo script, anticipated questions |
+| [database/README.md](database/README.md) | Database architecture, API reference, schema documentation, troubleshooting guide |
+| [root/About/AI-UPGRADE.md](root/About/AI-UPGRADE.md) | Evolution from cloud-only AI to database-first architecture |
+| [root/About/AI-TEST.md](root/About/AI-TEST.md) | Methodology for testing the SQLite-first AI query engine |
+| [Code Architecture.drawio](Code%20Architecture.drawio) | Full visual system architecture diagram |
 
 ---
 
-## 📝 License
+## Academic Context
 
-MIT © [Your Name] — See [LICENSE](LICENSE) for details.
+This project was developed as a university capstone thesis, demonstrating competency across the full engineering stack:
+
+| Domain | Implementation |
+|--------|---------------|
+| **IoT & Fog Computing** | Edge processing on ESP32 — safety detection runs on-device, independent of cloud connectivity |
+| **Distributed Systems** | Four independent microservices with structured graceful degradation at every integration boundary |
+| **Machine Learning Pipeline** | Twenty-eight engines spanning the complete ML lifecycle — ingestion, feature engineering, training, serving, monitoring, and edge deployment |
+| **Database Architecture** | Dual PostgreSQL + SQLite design with full schema parity and automated migration between tiers |
+| **Full-Stack Engineering** | Hardware (C++) to application server (Node.js) to AI services (Python) to presentation layer (HTML5/JavaScript) |
+| **Cost-Efficient AI Design** | Empirical demonstration that a database-first query architecture eliminates 80–85% of LLM API calls without reducing analytical capability |
+
+---
+
+## License
+
+MIT — See [LICENSE](LICENSE) for full terms.
 
 ---
 
 <p align="center">
-  <b>Built with ❤️ for safer, smarter fleet operations</b><br>
-  <sub>Arduino • Node.js • Python • PostgreSQL • Gemini AI</sub>
+  <sub>Built for safer, smarter fleet operations — Arduino &bull; Node.js &bull; Python &bull; PostgreSQL &bull; Gemini AI</sub>
 </p>
