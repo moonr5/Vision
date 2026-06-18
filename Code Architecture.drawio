@@ -1,0 +1,255 @@
+<mxfile host="app.diagrams.net" agent="SGU-Vision" version="22.1.0">
+  <diagram id="code-architecture" name="System Architecture">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;SGU Logistics &amp;amp; Telemetry — System Architecture&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=20;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="High-level integration map (not module-level detail)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="400" y="55" width="600" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Edge Layer -->
+        <mxCell id="lane-edge" value="Edge Layer" style="swimlane;horizontal=0;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="1320" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="esp32" value="&lt;b&gt;ESP32 MonzTrack&lt;/b&gt;&lt;br&gt;GPS + OBD-II + Sensors&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;obd2_scanner.ino&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b9e0b4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane-edge">
+          <mxGeometry x="540" y="40" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Message Bus -->
+        <mxCell id="lane-transport" value="Message Bus" style="swimlane;horizontal=0;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="210" width="1320" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="hivemq" value="&lt;b&gt;HiveMQ MQTT Broker&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;monztrack/device01/gps&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd9a8;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="lane-transport">
+          <mxGeometry x="540" y="40" width="200" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Backend Services -->
+        <mxCell id="lane-backend" value="Backend Services" style="swimlane;horizontal=0;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="330" width="1320" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="nodejs" value="&lt;b&gt;Node.js Server&lt;/b&gt;&lt;br&gt;MQTT subscriber · REST API&lt;br&gt;SSE stream · AI proxy&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;server.js&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0c4de;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane-backend">
+          <mxGeometry x="380" y="40" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="pythonai" value="&lt;b&gt;Python AI Backend&lt;/b&gt;&lt;br&gt;FastAPI · Gemini analysis&lt;br&gt;Telegram bot&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;ai_backend/main.py&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0c4de;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane-backend">
+          <mxGeometry x="780" y="40" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="railway" value="&lt;b&gt;Railway Hosting&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;2 services: Node + Python&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1e1e1;strokeColor=#999999;fontSize=10;dashed=1;" vertex="1" parent="lane-backend">
+          <mxGeometry x="1080" y="50" width="160" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Data Stores -->
+        <mxCell id="lane-data" value="Data Stores" style="swimlane;horizontal=0;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="1320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="postgresql" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;Server telemetry &amp;amp; events&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;database/pg-schema.sql&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5e6a8;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane-data">
+          <mxGeometry x="400" y="35" width="160" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="sqlite" value="&lt;b&gt;Browser SQLite&lt;/b&gt;&lt;br&gt;+ IndexedDB persistence&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;database/loader.js&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5e6a8;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane-data">
+          <mxGeometry x="900" y="35" width="170" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: Frontend -->
+        <mxCell id="lane-frontend" value="Frontend" style="swimlane;horizontal=0;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="630" width="1320" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="login" value="&lt;b&gt;login.html&lt;/b&gt;&lt;br&gt;Client-side auth gate&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;login.js&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4b8e0;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane-frontend">
+          <mxGeometry x="200" y="45" width="150" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="dashboard" value="&lt;b&gt;index.html Dashboard&lt;/b&gt;&lt;br&gt;Live map · Orders · Drivers&lt;br&gt;Analytics · Reports · AI chat&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;index.html&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4b8e0;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane-frontend">
+          <mxGeometry x="480" y="40" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dblayer" value="&lt;b&gt;Browser Database Layer&lt;/b&gt;&lt;br&gt;SQLite · DAL · Smart AI engine&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;database/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d4b8e0;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane-frontend">
+          <mxGeometry x="800" y="45" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: External Services -->
+        <mxCell id="lane-external" value="External Services" style="swimlane;horizontal=0;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="800" width="1320" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="gemini" value="&lt;b&gt;Google Gemini API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Browser + Python backend&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=#666666;fontSize=11;" vertex="1" parent="lane-external">
+          <mxGeometry x="300" y="45" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="telegram" value="&lt;b&gt;Telegram Bot API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Reports &amp;amp; PDF exports&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=#666666;fontSize=11;" vertex="1" parent="lane-external">
+          <mxGeometry x="580" y="45" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="tidb" value="&lt;b&gt;TiDB Cloud Data API&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Optional IoT snapshots&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=#666666;fontSize=11;dashed=1;" vertex="1" parent="lane-external">
+          <mxGeometry x="860" y="45" width="180" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry x="40" y="950" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="955" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-solid" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="990" as="sourcePoint" />
+            <mxPoint x="120" y="990" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-solid-label" value="Primary integration path" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="130" y="980" width="180" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-dashed" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#999999;dashed=1;dashPattern=8 8;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="55" y="1015" as="sourcePoint" />
+            <mxPoint x="120" y="1015" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend-dashed-label" value="Fallback / optional path" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="130" y="1005" width="180" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Edges: Edge to Transport -->
+        <mxCell id="e1" value="MQTT publish" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="esp32" target="hivemq">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- HiveMQ to Node.js -->
+        <mxCell id="e2" value="subscribe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="hivemq" target="nodejs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- HiveMQ to Dashboard (fallback, dashed) -->
+        <mxCell id="e3" value="direct MQTT (fallback)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#999999;dashed=1;dashPattern=8 8;fontSize=10;" edge="1" parent="1" source="hivemq" target="dashboard">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="265" />
+              <mxPoint x="1100" y="710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Node.js to PostgreSQL -->
+        <mxCell id="e4" value="persist telemetry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="nodejs" target="postgresql">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Node.js to Dashboard (SSE) -->
+        <mxCell id="e5" value="SSE /api/stream" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="nodejs" target="dashboard">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="405" />
+              <mxPoint x="320" y="710" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Node.js to Dashboard (REST) -->
+        <mxCell id="e6" value="REST /api/*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="nodejs" target="dashboard">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="430" />
+              <mxPoint x="350" y="730" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Node.js to Python AI -->
+        <mxCell id="e7" value="POST /api/ai/analyze" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="nodejs" target="pythonai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Python AI to PostgreSQL -->
+        <mxCell id="e8" value="fleet snapshot" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="pythonai" target="postgresql">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="480" />
+              <mxPoint x="480" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- login to Dashboard -->
+        <mxCell id="e9" value="client auth" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="login" target="dashboard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Dashboard to DB layer -->
+        <mxCell id="e10" value="loader.js bootstrap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dashboard" target="dblayer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- DB layer to SQLite -->
+        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;" edge="1" parent="1" source="dblayer" target="sqlite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- DB layer to Gemini -->
+        <mxCell id="e12" value="database-first AI" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dblayer" target="gemini">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="900" y="780" />
+              <mxPoint x="390" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Dashboard to Gemini -->
+        <mxCell id="e13" value="direct API" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dashboard" target="gemini">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Python AI to Gemini -->
+        <mxCell id="e14" value="analyze" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="pythonai" target="gemini">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="770" />
+              <mxPoint x="390" y="770" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Python AI to Telegram -->
+        <mxCell id="e15" value="bot commands / PDF" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="pythonai" target="telegram">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="790" />
+              <mxPoint x="670" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Dashboard to Telegram -->
+        <mxCell id="e16" value="PDF export" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#333333;fontSize=10;" edge="1" parent="1" source="dashboard" target="telegram">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="790" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Dashboard to TiDB (optional, dashed) -->
+        <mxCell id="e17" value="IoT snapshots (optional)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#999999;dashed=1;dashPattern=8 8;fontSize=10;" edge="1" parent="1" source="dashboard" target="tidb">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="810" />
+              <mxPoint x="950" y="810" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Railway annotation lines (dotted connectors to services) -->
+        <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#aaaaaa;dashed=1;dashPattern=4 4;endArrow=none;" edge="1" parent="1" source="railway" target="nodejs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1;strokeColor=#aaaaaa;dashed=1;dashPattern=4 4;endArrow=none;" edge="1" parent="1" source="railway" target="pythonai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
